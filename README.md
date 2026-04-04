@@ -1,1 +1,1 @@
-# CoreLogic
+ClusterNodes maps your Kubernetes cluster like a digital street map to find hidden "shortcuts" hackers use to steal data. It uses smart math to show how one small security hole can lead a hacker straight to your most private files. The dashboard lets you watch these attacks in a visual simulator and uses AI to give you the exact "fix-it" code to block them.
