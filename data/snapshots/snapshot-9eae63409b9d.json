@@ -1,0 +1,2353 @@
+{
+  "id": "snapshot-9eae63409b9d",
+  "timestamp": "2026-03-29T18:59:42.696883",
+  "cluster_data": {
+    "timestamp": "2026-03-29T18:55:46.789833",
+    "cluster_name": "prod-cluster",
+    "pods": [
+      {
+        "id": "pod-f43c07fc",
+        "name": "api-server",
+        "namespace": "production",
+        "image": "alpine:3.12",
+        "type": "Pod",
+        "created": "2026-01-06T18:55:46.789441",
+        "is_privileged": true,
+        "exposed_to_internet": true,
+        "cve": {
+          "cve_id": "CVE-2021-36159",
+          "cvss_score": 5.3,
+          "severity": "MEDIUM"
+        },
+        "labels": {
+          "app": "api-server",
+          "tier": "database",
+          "env": "prod"
+        }
+      },
+      {
+        "id": "pod-e2dd9b42",
+        "name": "web-frontend",
+        "namespace": "default",
+        "image": "nginx:1.19",
+        "type": "Pod",
+        "created": "2026-01-28T18:55:46.789462",
+        "is_privileged": false,
+        "exposed_to_internet": true,
+        "cve": {
+          "cve_id": "CVE-2021-23017",
+          "cvss_score": 8.1,
+          "severity": "HIGH"
+        },
+        "labels": {
+          "app": "web-frontend",
+          "tier": "database",
+          "env": "prod"
+        }
+      },
+      {
+        "id": "pod-48af3a71",
+        "name": "auth-service",
+        "namespace": "default",
+        "image": "redis:5.0",
+        "type": "Pod",
+        "created": "2026-01-05T18:55:46.789469",
+        "is_privileged": true,
+        "exposed_to_internet": true,
+        "cve": {
+          "cve_id": "CVE-2021-32675",
+          "cvss_score": 7.5,
+          "severity": "HIGH"
+        },
+        "labels": {
+          "app": "auth-service",
+          "tier": "backend",
+          "env": "prod"
+        }
+      },
+      {
+        "id": "pod-85aa4a14",
+        "name": "payment-gateway",
+        "namespace": "production",
+        "image": "ubuntu:18.04",
+        "type": "Pod",
+        "created": "2026-03-06T18:55:46.789475",
+        "is_privileged": true,
+        "exposed_to_internet": true,
+        "cve": {
+          "cve_id": "CVE-2021-3711",
+          "cvss_score": 9.8,
+          "severity": "CRITICAL"
+        },
+        "labels": {
+          "app": "payment-gateway",
+          "tier": "backend",
+          "env": "staging"
+        }
+      },
+      {
+        "id": "pod-5ca6890f",
+        "name": "data-processor",
+        "namespace": "staging",
+        "image": "postgres:12",
+        "type": "Pod",
+        "created": "2026-03-01T18:55:46.789481",
+        "is_privileged": true,
+        "exposed_to_internet": true,
+        "cve": {
+          "cve_id": "CVE-2021-32027",
+          "cvss_score": 6.5,
+          "severity": "MEDIUM"
+        },
+        "labels": {
+          "app": "data-processor",
+          "tier": "backend",
+          "env": "prod"
+        }
+      },
+      {
+        "id": "pod-3d37df8a",
+        "name": "cache-service",
+        "namespace": "default",
+        "image": "alpine:3.12",
+        "type": "Pod",
+        "created": "2026-01-04T18:55:46.789487",
+        "is_privileged": false,
+        "exposed_to_internet": false,
+        "cve": {
+          "cve_id": "CVE-2021-36159",
+          "cvss_score": 5.3,
+          "severity": "MEDIUM"
+        },
+        "labels": {
+          "app": "cache-service",
+          "tier": "database",
+          "env": "staging"
+        }
+      },
+      {
+        "id": "pod-96c18300",
+        "name": "monitoring-agent",
+        "namespace": "staging",
+        "image": "nginx:1.19",
+        "type": "Pod",
+        "created": "2026-01-07T18:55:46.789493",
+        "is_privileged": false,
+        "exposed_to_internet": false,
+        "cve": {
+          "cve_id": "CVE-2021-23017",
+          "cvss_score": 8.1,
+          "severity": "HIGH"
+        },
+        "labels": {
+          "app": "monitoring-agent",
+          "tier": "frontend",
+          "env": "staging"
+        }
+      },
+      {
+        "id": "pod-2bffafce",
+        "name": "log-collector",
+        "namespace": "production",
+        "image": "alpine:3.12",
+        "type": "Pod",
+        "created": "2026-03-18T18:55:46.789498",
+        "is_privileged": false,
+        "exposed_to_internet": false,
+        "cve": {
+          "cve_id": "CVE-2021-36159",
+          "cvss_score": 5.3,
+          "severity": "MEDIUM"
+        },
+        "labels": {
+          "app": "log-collector",
+          "tier": "backend",
+          "env": "prod"
+        }
+      },
+      {
+        "id": "pod-e0c74618",
+        "name": "worker-1",
+        "namespace": "default",
+        "image": "alpine:3.12",
+        "type": "Pod",
+        "created": "2026-03-15T18:55:46.789504",
+        "is_privileged": true,
+        "exposed_to_internet": false,
+        "cve": {
+          "cve_id": "CVE-2021-36159",
+          "cvss_score": 5.3,
+          "severity": "MEDIUM"
+        },
+        "labels": {
+          "app": "worker-1",
+          "tier": "frontend",
+          "env": "prod"
+        }
+      },
+      {
+        "id": "pod-fb2dd7b6",
+        "name": "worker-2",
+        "namespace": "production",
+        "image": "nginx:1.19",
+        "type": "Pod",
+        "created": "2026-03-04T18:55:46.789510",
+        "is_privileged": true,
+        "exposed_to_internet": false,
+        "cve": {
+          "cve_id": "CVE-2021-23017",
+          "cvss_score": 8.1,
+          "severity": "HIGH"
+        },
+        "labels": {
+          "app": "worker-2",
+          "tier": "backend",
+          "env": "prod"
+        }
+      },
+      {
+        "id": "pod-7e078511",
+        "name": "scheduler",
+        "namespace": "default",
+        "image": "alpine:3.12",
+        "type": "Pod",
+        "created": "2026-03-10T18:55:46.789515",
+        "is_privileged": false,
+        "exposed_to_internet": false,
+        "cve": {
+          "cve_id": "CVE-2021-36159",
+          "cvss_score": 5.3,
+          "severity": "MEDIUM"
+        },
+        "labels": {
+          "app": "scheduler",
+          "tier": "backend",
+          "env": "staging"
+        }
+      },
+      {
+        "id": "pod-9970acae",
+        "name": "queue-manager",
+        "namespace": "staging",
+        "image": "ubuntu:18.04",
+        "type": "Pod",
+        "created": "2026-02-20T18:55:46.789521",
+        "is_privileged": false,
+        "exposed_to_internet": false,
+        "cve": {
+          "cve_id": "CVE-2021-3711",
+          "cvss_score": 9.8,
+          "severity": "CRITICAL"
+        },
+        "labels": {
+          "app": "queue-manager",
+          "tier": "frontend",
+          "env": "prod"
+        }
+      },
+      {
+        "id": "pod-82a5dfa8",
+        "name": "ml-service",
+        "namespace": "default",
+        "image": "nginx:1.19",
+        "type": "Pod",
+        "created": "2026-02-07T18:55:46.789527",
+        "is_privileged": true,
+        "exposed_to_internet": false,
+        "cve": {
+          "cve_id": "CVE-2021-23017",
+          "cvss_score": 8.1,
+          "severity": "HIGH"
+        },
+        "labels": {
+          "app": "ml-service",
+          "tier": "frontend",
+          "env": "staging"
+        }
+      },
+      {
+        "id": "pod-65736f33",
+        "name": "notification-service",
+        "namespace": "default",
+        "image": "ubuntu:18.04",
+        "type": "Pod",
+        "created": "2026-03-26T18:55:46.789532",
+        "is_privileged": true,
+        "exposed_to_internet": false,
+        "cve": {
+          "cve_id": "CVE-2021-3711",
+          "cvss_score": 9.8,
+          "severity": "CRITICAL"
+        },
+        "labels": {
+          "app": "notification-service",
+          "tier": "database",
+          "env": "prod"
+        }
+      },
+      {
+        "id": "pod-978201a4",
+        "name": "analytics-engine",
+        "namespace": "production",
+        "image": "alpine:3.12",
+        "type": "Pod",
+        "created": "2026-01-18T18:55:46.789538",
+        "is_privileged": false,
+        "exposed_to_internet": false,
+        "cve": {
+          "cve_id": "CVE-2021-36159",
+          "cvss_score": 5.3,
+          "severity": "MEDIUM"
+        },
+        "labels": {
+          "app": "analytics-engine",
+          "tier": "database",
+          "env": "staging"
+        }
+      },
+      {
+        "id": "pod-44f7a7a6",
+        "name": "backup-service",
+        "namespace": "production",
+        "image": "nginx:1.19",
+        "type": "Pod",
+        "created": "2026-01-26T18:55:46.789544",
+        "is_privileged": false,
+        "exposed_to_internet": false,
+        "cve": {
+          "cve_id": "CVE-2021-23017",
+          "cvss_score": 8.1,
+          "severity": "HIGH"
+        },
+        "labels": {
+          "app": "backup-service",
+          "tier": "backend",
+          "env": "staging"
+        }
+      },
+      {
+        "id": "pod-2e398f27",
+        "name": "cdn-proxy",
+        "namespace": "default",
+        "image": "alpine:3.12",
+        "type": "Pod",
+        "created": "2026-01-10T18:55:46.789549",
+        "is_privileged": true,
+        "exposed_to_internet": false,
+        "cve": {
+          "cve_id": "CVE-2021-36159",
+          "cvss_score": 5.3,
+          "severity": "MEDIUM"
+        },
+        "labels": {
+          "app": "cdn-proxy",
+          "tier": "database",
+          "env": "prod"
+        }
+      },
+      {
+        "id": "pod-90ef0bcc",
+        "name": "database-proxy",
+        "namespace": "staging",
+        "image": "ubuntu:18.04",
+        "type": "Pod",
+        "created": "2026-02-14T18:55:46.789555",
+        "is_privileged": true,
+        "exposed_to_internet": false,
+        "cve": {
+          "cve_id": "CVE-2021-3711",
+          "cvss_score": 9.8,
+          "severity": "CRITICAL"
+        },
+        "labels": {
+          "app": "database-proxy",
+          "tier": "frontend",
+          "env": "prod"
+        }
+      },
+      {
+        "id": "pod-89808689",
+        "name": "redis-master",
+        "namespace": "default",
+        "image": "redis:5.0",
+        "type": "Pod",
+        "created": "2026-03-04T18:55:46.789560",
+        "is_privileged": true,
+        "exposed_to_internet": false,
+        "cve": {
+          "cve_id": "CVE-2021-32675",
+          "cvss_score": 7.5,
+          "severity": "HIGH"
+        },
+        "labels": {
+          "app": "redis-master",
+          "tier": "frontend",
+          "env": "prod"
+        }
+      },
+      {
+        "id": "pod-f16e1e3c",
+        "name": "etcd-node",
+        "namespace": "staging",
+        "image": "nginx:1.19",
+        "type": "Pod",
+        "created": "2026-02-14T18:55:46.789573",
+        "is_privileged": false,
+        "exposed_to_internet": false,
+        "cve": {
+          "cve_id": "CVE-2021-23017",
+          "cvss_score": 8.1,
+          "severity": "HIGH"
+        },
+        "labels": {
+          "app": "etcd-node",
+          "tier": "database",
+          "env": "prod"
+        }
+      }
+    ],
+    "service_accounts": [
+      {
+        "id": "sa-f0a0615d",
+        "name": "svc-admin",
+        "namespace": "production",
+        "type": "ServiceAccount",
+        "auto_mount_token": true,
+        "created": "2025-12-20T18:55:46.789581"
+      },
+      {
+        "id": "sa-5f374ca3",
+        "name": "svc-monitor",
+        "namespace": "kube-system",
+        "type": "ServiceAccount",
+        "auto_mount_token": true,
+        "created": "2025-10-23T18:55:46.789586"
+      },
+      {
+        "id": "sa-12041e5e",
+        "name": "svc-deploy",
+        "namespace": "production",
+        "type": "ServiceAccount",
+        "auto_mount_token": true,
+        "created": "2026-02-13T18:55:46.789590"
+      },
+      {
+        "id": "sa-87d6564a",
+        "name": "svc-reader",
+        "namespace": "default",
+        "type": "ServiceAccount",
+        "auto_mount_token": true,
+        "created": "2025-12-09T18:55:46.789594"
+      },
+      {
+        "id": "sa-950479b3",
+        "name": "svc-operator",
+        "namespace": "production",
+        "type": "ServiceAccount",
+        "auto_mount_token": true,
+        "created": "2025-11-20T18:55:46.789599"
+      },
+      {
+        "id": "sa-822628b8",
+        "name": "svc-controller",
+        "namespace": "kube-system",
+        "type": "ServiceAccount",
+        "auto_mount_token": true,
+        "created": "2025-10-04T18:55:46.789603"
+      },
+      {
+        "id": "sa-0d517b23",
+        "name": "svc-webhook",
+        "namespace": "kube-system",
+        "type": "ServiceAccount",
+        "auto_mount_token": true,
+        "created": "2026-01-15T18:55:46.789608"
+      },
+      {
+        "id": "sa-4b82cbee",
+        "name": "svc-scheduler",
+        "namespace": "kube-system",
+        "type": "ServiceAccount",
+        "auto_mount_token": true,
+        "created": "2025-12-28T18:55:46.789613"
+      },
+      {
+        "id": "sa-6f1d65bd",
+        "name": "svc-backup",
+        "namespace": "production",
+        "type": "ServiceAccount",
+        "auto_mount_token": true,
+        "created": "2025-10-31T18:55:46.789617"
+      },
+      {
+        "id": "sa-0a194fc8",
+        "name": "svc-cron",
+        "namespace": "default",
+        "type": "ServiceAccount",
+        "auto_mount_token": true,
+        "created": "2026-01-05T18:55:46.789622"
+      },
+      {
+        "id": "sa-78f73342",
+        "name": "svc-job-runner",
+        "namespace": "kube-system",
+        "type": "ServiceAccount",
+        "auto_mount_token": true,
+        "created": "2026-02-23T18:55:46.789626"
+      },
+      {
+        "id": "sa-5e7dd6ea",
+        "name": "svc-api-gateway",
+        "namespace": "production",
+        "type": "ServiceAccount",
+        "auto_mount_token": true,
+        "created": "2026-02-11T18:55:46.789630"
+      },
+      {
+        "id": "sa-c31d7e3f",
+        "name": "svc-auth-provider",
+        "namespace": "production",
+        "type": "ServiceAccount",
+        "auto_mount_token": true,
+        "created": "2025-11-15T18:55:46.789634"
+      },
+      {
+        "id": "sa-783ab83f",
+        "name": "svc-secret-manager",
+        "namespace": "kube-system",
+        "type": "ServiceAccount",
+        "auto_mount_token": true,
+        "created": "2026-01-25T18:55:46.789639"
+      },
+      {
+        "id": "sa-78f81900",
+        "name": "svc-network-policy",
+        "namespace": "default",
+        "type": "ServiceAccount",
+        "auto_mount_token": true,
+        "created": "2026-01-09T18:55:46.789643"
+      }
+    ],
+    "roles": [
+      {
+        "id": "role-06e81772",
+        "name": "cluster-admin",
+        "namespace": null,
+        "type": "ClusterRole",
+        "permissions": [
+          "*"
+        ],
+        "risk_level": "CRITICAL",
+        "created": "2026-01-09T18:55:46.789654"
+      },
+      {
+        "id": "role-bbb323bb",
+        "name": "admin",
+        "namespace": "default",
+        "type": "Role",
+        "permissions": [
+          "*"
+        ],
+        "risk_level": "HIGH",
+        "created": "2025-08-23T18:55:46.789659"
+      },
+      {
+        "id": "role-bd9a84e5",
+        "name": "secret-reader",
+        "namespace": "default",
+        "type": "Role",
+        "permissions": [
+          "secrets:get",
+          "secrets:list"
+        ],
+        "risk_level": "HIGH",
+        "created": "2025-06-15T18:55:46.789663"
+      },
+      {
+        "id": "role-638cacab",
+        "name": "pod-exec",
+        "namespace": "default",
+        "type": "Role",
+        "permissions": [
+          "pods:exec",
+          "pods:attach"
+        ],
+        "risk_level": "HIGH",
+        "created": "2025-06-03T18:55:46.789667"
+      },
+      {
+        "id": "role-76b9777e",
+        "name": "etcd-access",
+        "namespace": null,
+        "type": "ClusterRole",
+        "permissions": [
+          "etcd:read",
+          "etcd:write"
+        ],
+        "risk_level": "CRITICAL",
+        "created": "2025-08-08T18:55:46.789671"
+      },
+      {
+        "id": "role-23d14522",
+        "name": "node-admin",
+        "namespace": null,
+        "type": "ClusterRole",
+        "permissions": [
+          "nodes:*"
+        ],
+        "risk_level": "HIGH",
+        "created": "2025-11-24T18:55:46.789675"
+      },
+      {
+        "id": "role-16161d2f",
+        "name": "secret-writer",
+        "namespace": "default",
+        "type": "Role",
+        "permissions": [
+          "secrets:*"
+        ],
+        "risk_level": "HIGH",
+        "created": "2025-10-11T18:55:46.789679"
+      },
+      {
+        "id": "role-631dd611",
+        "name": "configmap-reader",
+        "namespace": "default",
+        "type": "Role",
+        "permissions": [
+          "configmaps:get"
+        ],
+        "risk_level": "MEDIUM",
+        "created": "2026-01-06T18:55:46.789683"
+      },
+      {
+        "id": "role-f6659372",
+        "name": "pod-reader",
+        "namespace": "default",
+        "type": "Role",
+        "permissions": [
+          "pods:get",
+          "pods:list"
+        ],
+        "risk_level": "LOW",
+        "created": "2025-09-20T18:55:46.789687"
+      },
+      {
+        "id": "role-036014bb",
+        "name": "service-viewer",
+        "namespace": "default",
+        "type": "Role",
+        "permissions": [
+          "services:get"
+        ],
+        "risk_level": "LOW",
+        "created": "2025-09-10T18:55:46.789690"
+      },
+      {
+        "id": "role-648da959",
+        "name": "rbac-manager",
+        "namespace": null,
+        "type": "ClusterRole",
+        "permissions": [
+          "rbac:*"
+        ],
+        "risk_level": "CRITICAL",
+        "created": "2025-05-22T18:55:46.789694"
+      },
+      {
+        "id": "role-1a0d7749",
+        "name": "namespace-admin",
+        "namespace": "default",
+        "type": "Role",
+        "permissions": [
+          "*"
+        ],
+        "risk_level": "HIGH",
+        "created": "2025-08-13T18:55:46.789698"
+      }
+    ],
+    "secrets": [
+      {
+        "id": "secret-6e330f52",
+        "name": "prod-db-creds",
+        "namespace": "production",
+        "type": "Secret",
+        "sensitivity": "CRITICAL",
+        "contains": "database passwords",
+        "is_crown_jewel": true,
+        "created": "2025-02-07T18:55:46.789705"
+      },
+      {
+        "id": "secret-3c754cb6",
+        "name": "api-keys",
+        "namespace": "default",
+        "type": "Secret",
+        "sensitivity": "HIGH",
+        "contains": "third-party API keys",
+        "is_crown_jewel": false,
+        "created": "2024-11-29T18:55:46.789710"
+      },
+      {
+        "id": "secret-e61fd76e",
+        "name": "tls-certs",
+        "namespace": "default",
+        "type": "Secret",
+        "sensitivity": "HIGH",
+        "contains": "TLS certificates",
+        "is_crown_jewel": false,
+        "created": "2025-07-28T18:55:46.789714"
+      },
+      {
+        "id": "secret-4cabff04",
+        "name": "aws-credentials",
+        "namespace": "kube-system",
+        "type": "Secret",
+        "sensitivity": "CRITICAL",
+        "contains": "cloud provider credentials",
+        "is_crown_jewel": true,
+        "created": "2025-10-01T18:55:46.789719"
+      },
+      {
+        "id": "secret-f322992b",
+        "name": "jwt-secret",
+        "namespace": "production",
+        "type": "Secret",
+        "sensitivity": "HIGH",
+        "contains": "JWT signing keys",
+        "is_crown_jewel": false,
+        "created": "2024-12-23T18:55:46.789723"
+      },
+      {
+        "id": "secret-b11adc57",
+        "name": "encryption-keys",
+        "namespace": "kube-system",
+        "type": "Secret",
+        "sensitivity": "CRITICAL",
+        "contains": "data encryption keys",
+        "is_crown_jewel": true,
+        "created": "2025-02-07T18:55:46.789727"
+      },
+      {
+        "id": "secret-134c41b3",
+        "name": "oauth-client-secret",
+        "namespace": "production",
+        "type": "Secret",
+        "sensitivity": "HIGH",
+        "contains": "OAuth credentials",
+        "is_crown_jewel": false,
+        "created": "2025-11-07T18:55:46.789731"
+      },
+      {
+        "id": "secret-462a6b51",
+        "name": "registry-credentials",
+        "namespace": "default",
+        "type": "Secret",
+        "sensitivity": "MEDIUM",
+        "contains": "container registry auth",
+        "is_crown_jewel": false,
+        "created": "2024-11-17T18:55:46.789735"
+      },
+      {
+        "id": "secret-664a876f",
+        "name": "webhook-tokens",
+        "namespace": "production",
+        "type": "Secret",
+        "sensitivity": "MEDIUM",
+        "contains": "webhook authentication",
+        "is_crown_jewel": false,
+        "created": "2025-11-13T18:55:46.789739"
+      },
+      {
+        "id": "secret-d6c8cc40",
+        "name": "ssh-keys",
+        "namespace": "kube-system",
+        "type": "Secret",
+        "sensitivity": "HIGH",
+        "contains": "SSH private keys",
+        "is_crown_jewel": false,
+        "created": "2025-03-11T18:55:46.789743"
+      }
+    ],
+    "role_bindings": [
+      {
+        "id": "binding-4caf9fe5",
+        "type": "PodToServiceAccount",
+        "source": "pod-f43c07fc",
+        "source_name": "api-server",
+        "target": "sa-f0a0615d",
+        "target_name": "svc-admin"
+      },
+      {
+        "id": "binding-0dd72ef3",
+        "type": "ServiceAccountToRole",
+        "source": "sa-f0a0615d",
+        "source_name": "svc-admin",
+        "target": "role-06e81772",
+        "target_name": "cluster-admin"
+      },
+      {
+        "id": "binding-d681de92",
+        "type": "PodToServiceAccount",
+        "source": "pod-f43c07fc",
+        "source_name": "api-server",
+        "target": "sa-6f1d65bd",
+        "target_name": "svc-backup"
+      },
+      {
+        "id": "binding-9b8e61e0",
+        "type": "PodToServiceAccount",
+        "source": "pod-e2dd9b42",
+        "source_name": "web-frontend",
+        "target": "sa-78f73342",
+        "target_name": "svc-job-runner"
+      },
+      {
+        "id": "binding-26aaf2ac",
+        "type": "PodToServiceAccount",
+        "source": "pod-48af3a71",
+        "source_name": "auth-service",
+        "target": "sa-822628b8",
+        "target_name": "svc-controller"
+      },
+      {
+        "id": "binding-c56540e8",
+        "type": "PodToServiceAccount",
+        "source": "pod-85aa4a14",
+        "source_name": "payment-gateway",
+        "target": "sa-6f1d65bd",
+        "target_name": "svc-backup"
+      },
+      {
+        "id": "binding-111556f1",
+        "type": "PodToServiceAccount",
+        "source": "pod-5ca6890f",
+        "source_name": "data-processor",
+        "target": "sa-f0a0615d",
+        "target_name": "svc-admin"
+      },
+      {
+        "id": "binding-c6b9d14c",
+        "type": "PodToServiceAccount",
+        "source": "pod-3d37df8a",
+        "source_name": "cache-service",
+        "target": "sa-c31d7e3f",
+        "target_name": "svc-auth-provider"
+      },
+      {
+        "id": "binding-7ff1f0e3",
+        "type": "PodToServiceAccount",
+        "source": "pod-96c18300",
+        "source_name": "monitoring-agent",
+        "target": "sa-c31d7e3f",
+        "target_name": "svc-auth-provider"
+      },
+      {
+        "id": "binding-27f22921",
+        "type": "PodToServiceAccount",
+        "source": "pod-2bffafce",
+        "source_name": "log-collector",
+        "target": "sa-c31d7e3f",
+        "target_name": "svc-auth-provider"
+      },
+      {
+        "id": "binding-2df7bd06",
+        "type": "PodToServiceAccount",
+        "source": "pod-e0c74618",
+        "source_name": "worker-1",
+        "target": "sa-6f1d65bd",
+        "target_name": "svc-backup"
+      },
+      {
+        "id": "binding-6f8a72e2",
+        "type": "PodToServiceAccount",
+        "source": "pod-fb2dd7b6",
+        "source_name": "worker-2",
+        "target": "sa-12041e5e",
+        "target_name": "svc-deploy"
+      },
+      {
+        "id": "binding-876ffa02",
+        "type": "PodToServiceAccount",
+        "source": "pod-7e078511",
+        "source_name": "scheduler",
+        "target": "sa-c31d7e3f",
+        "target_name": "svc-auth-provider"
+      },
+      {
+        "id": "binding-2473b9fd",
+        "type": "PodToServiceAccount",
+        "source": "pod-9970acae",
+        "source_name": "queue-manager",
+        "target": "sa-5f374ca3",
+        "target_name": "svc-monitor"
+      },
+      {
+        "id": "binding-54a3648b",
+        "type": "PodToServiceAccount",
+        "source": "pod-82a5dfa8",
+        "source_name": "ml-service",
+        "target": "sa-0a194fc8",
+        "target_name": "svc-cron"
+      },
+      {
+        "id": "binding-f30adeea",
+        "type": "PodToServiceAccount",
+        "source": "pod-65736f33",
+        "source_name": "notification-service",
+        "target": "sa-c31d7e3f",
+        "target_name": "svc-auth-provider"
+      },
+      {
+        "id": "binding-29a3dd00",
+        "type": "PodToServiceAccount",
+        "source": "pod-978201a4",
+        "source_name": "analytics-engine",
+        "target": "sa-0a194fc8",
+        "target_name": "svc-cron"
+      },
+      {
+        "id": "binding-04dc2bb0",
+        "type": "ServiceAccountToRole",
+        "source": "sa-f0a0615d",
+        "source_name": "svc-admin",
+        "target": "role-23d14522",
+        "target_name": "node-admin"
+      },
+      {
+        "id": "binding-151be8a5",
+        "type": "ServiceAccountToRole",
+        "source": "sa-5f374ca3",
+        "source_name": "svc-monitor",
+        "target": "role-648da959",
+        "target_name": "rbac-manager"
+      },
+      {
+        "id": "binding-d0c0da7f",
+        "type": "ServiceAccountToRole",
+        "source": "sa-12041e5e",
+        "source_name": "svc-deploy",
+        "target": "role-036014bb",
+        "target_name": "service-viewer"
+      },
+      {
+        "id": "binding-49d3fcb4",
+        "type": "ServiceAccountToRole",
+        "source": "sa-87d6564a",
+        "source_name": "svc-reader",
+        "target": "role-638cacab",
+        "target_name": "pod-exec"
+      },
+      {
+        "id": "binding-c5e75943",
+        "type": "ServiceAccountToRole",
+        "source": "sa-950479b3",
+        "source_name": "svc-operator",
+        "target": "role-638cacab",
+        "target_name": "pod-exec"
+      },
+      {
+        "id": "binding-7fecd189",
+        "type": "ServiceAccountToRole",
+        "source": "sa-822628b8",
+        "source_name": "svc-controller",
+        "target": "role-631dd611",
+        "target_name": "configmap-reader"
+      },
+      {
+        "id": "binding-8efd59a5",
+        "type": "ServiceAccountToRole",
+        "source": "sa-0d517b23",
+        "source_name": "svc-webhook",
+        "target": "role-76b9777e",
+        "target_name": "etcd-access"
+      },
+      {
+        "id": "binding-8188aa19",
+        "type": "ServiceAccountToRole",
+        "source": "sa-4b82cbee",
+        "source_name": "svc-scheduler",
+        "target": "role-23d14522",
+        "target_name": "node-admin"
+      },
+      {
+        "id": "binding-c15258c3",
+        "type": "ServiceAccountToRole",
+        "source": "sa-6f1d65bd",
+        "source_name": "svc-backup",
+        "target": "role-638cacab",
+        "target_name": "pod-exec"
+      },
+      {
+        "id": "binding-35808732",
+        "type": "ServiceAccountToRole",
+        "source": "sa-0a194fc8",
+        "source_name": "svc-cron",
+        "target": "role-631dd611",
+        "target_name": "configmap-reader"
+      },
+      {
+        "id": "binding-b60c92f3",
+        "type": "ServiceAccountToRole",
+        "source": "sa-78f73342",
+        "source_name": "svc-job-runner",
+        "target": "role-23d14522",
+        "target_name": "node-admin"
+      },
+      {
+        "id": "binding-268cd49b",
+        "type": "ServiceAccountToRole",
+        "source": "sa-5e7dd6ea",
+        "source_name": "svc-api-gateway",
+        "target": "role-648da959",
+        "target_name": "rbac-manager"
+      },
+      {
+        "id": "binding-a17a9556",
+        "type": "ServiceAccountToRole",
+        "source": "sa-c31d7e3f",
+        "source_name": "svc-auth-provider",
+        "target": "role-638cacab",
+        "target_name": "pod-exec"
+      },
+      {
+        "id": "binding-93de18a3",
+        "type": "ServiceAccountToRole",
+        "source": "sa-783ab83f",
+        "source_name": "svc-secret-manager",
+        "target": "role-bbb323bb",
+        "target_name": "admin"
+      },
+      {
+        "id": "binding-6eb1f08a",
+        "type": "ServiceAccountToRole",
+        "source": "sa-78f81900",
+        "source_name": "svc-network-policy",
+        "target": "role-16161d2f",
+        "target_name": "secret-writer"
+      }
+    ],
+    "metadata": {
+      "total_nodes": 57,
+      "namespaces": [
+        "default",
+        "kube-system",
+        "production",
+        "staging"
+      ]
+    }
+  },
+  "analysis_results": {
+    "graph_statistics": {
+      "total_nodes": 57,
+      "total_edges": 102,
+      "is_dag": true,
+      "density": 0.03195488721804511,
+      "nodes_by_type": {
+        "Pod": 20,
+        "ServiceAccount": 15,
+        "ClusterRole": 4,
+        "Role": 8,
+        "Secret": 10
+      },
+      "crown_jewels": [
+        {
+          "id": "pod-f43c07fc",
+          "name": "api-server",
+          "type": "Pod",
+          "risk_score": 13.3
+        },
+        {
+          "id": "pod-e2dd9b42",
+          "name": "web-frontend",
+          "type": "Pod",
+          "risk_score": 13.1
+        },
+        {
+          "id": "pod-48af3a71",
+          "name": "auth-service",
+          "type": "Pod",
+          "risk_score": 15.5
+        },
+        {
+          "id": "pod-85aa4a14",
+          "name": "payment-gateway",
+          "type": "Pod",
+          "risk_score": 17.8
+        },
+        {
+          "id": "pod-5ca6890f",
+          "name": "data-processor",
+          "type": "Pod",
+          "risk_score": 14.5
+        },
+        {
+          "id": "pod-fb2dd7b6",
+          "name": "worker-2",
+          "type": "Pod",
+          "risk_score": 11.1
+        },
+        {
+          "id": "pod-9970acae",
+          "name": "queue-manager",
+          "type": "Pod",
+          "risk_score": 9.8
+        },
+        {
+          "id": "pod-82a5dfa8",
+          "name": "ml-service",
+          "type": "Pod",
+          "risk_score": 11.1
+        },
+        {
+          "id": "pod-65736f33",
+          "name": "notification-service",
+          "type": "Pod",
+          "risk_score": 12.8
+        },
+        {
+          "id": "pod-90ef0bcc",
+          "name": "database-proxy",
+          "type": "Pod",
+          "risk_score": 12.8
+        },
+        {
+          "id": "pod-89808689",
+          "name": "redis-master",
+          "type": "Pod",
+          "risk_score": 10.5
+        },
+        {
+          "id": "role-06e81772",
+          "name": "cluster-admin",
+          "type": "ClusterRole",
+          "risk_score": 10.0
+        },
+        {
+          "id": "role-76b9777e",
+          "name": "etcd-access",
+          "type": "ClusterRole",
+          "risk_score": 10.0
+        },
+        {
+          "id": "role-648da959",
+          "name": "rbac-manager",
+          "type": "ClusterRole",
+          "risk_score": 10.0
+        },
+        {
+          "id": "secret-6e330f52",
+          "name": "prod-db-creds",
+          "type": "Secret",
+          "risk_score": 10.0
+        },
+        {
+          "id": "secret-4cabff04",
+          "name": "aws-credentials",
+          "type": "Secret",
+          "risk_score": 10.0
+        },
+        {
+          "id": "secret-b11adc57",
+          "name": "encryption-keys",
+          "type": "Secret",
+          "risk_score": 10.0
+        }
+      ],
+      "entry_points": [
+        {
+          "id": "pod-f43c07fc",
+          "name": "api-server",
+          "type": "Pod",
+          "cve": {
+            "cve_id": "CVE-2021-36159",
+            "cvss_score": 5.3,
+            "severity": "MEDIUM"
+          }
+        },
+        {
+          "id": "pod-e2dd9b42",
+          "name": "web-frontend",
+          "type": "Pod",
+          "cve": {
+            "cve_id": "CVE-2021-23017",
+            "cvss_score": 8.1,
+            "severity": "HIGH"
+          }
+        },
+        {
+          "id": "pod-48af3a71",
+          "name": "auth-service",
+          "type": "Pod",
+          "cve": {
+            "cve_id": "CVE-2021-32675",
+            "cvss_score": 7.5,
+            "severity": "HIGH"
+          }
+        },
+        {
+          "id": "pod-85aa4a14",
+          "name": "payment-gateway",
+          "type": "Pod",
+          "cve": {
+            "cve_id": "CVE-2021-3711",
+            "cvss_score": 9.8,
+            "severity": "CRITICAL"
+          }
+        },
+        {
+          "id": "pod-5ca6890f",
+          "name": "data-processor",
+          "type": "Pod",
+          "cve": {
+            "cve_id": "CVE-2021-32027",
+            "cvss_score": 6.5,
+            "severity": "MEDIUM"
+          }
+        }
+      ]
+    },
+    "attack_paths": {
+      "total_paths": 15,
+      "by_severity": {
+        "critical_count": 15,
+        "high_count": 0,
+        "medium_count": 0,
+        "low_count": 0
+      },
+      "paths": {
+        "CRITICAL": [
+          {
+            "path": [
+              "pod-5ca6890f",
+              "sa-f0a0615d",
+              "role-06e81772",
+              "secret-6e330f52"
+            ],
+            "length": 4,
+            "entry_point": "data-processor",
+            "crown_jewel": "prod-db-creds",
+            "total_risk": 36.5,
+            "severity": "CRITICAL"
+          },
+          {
+            "path": [
+              "pod-5ca6890f",
+              "sa-f0a0615d",
+              "role-06e81772",
+              "secret-4cabff04"
+            ],
+            "length": 4,
+            "entry_point": "data-processor",
+            "crown_jewel": "aws-credentials",
+            "total_risk": 36.5,
+            "severity": "CRITICAL"
+          },
+          {
+            "path": [
+              "pod-5ca6890f",
+              "sa-f0a0615d",
+              "role-06e81772",
+              "secret-b11adc57"
+            ],
+            "length": 4,
+            "entry_point": "data-processor",
+            "crown_jewel": "encryption-keys",
+            "total_risk": 36.5,
+            "severity": "CRITICAL"
+          },
+          {
+            "path": [
+              "pod-f43c07fc",
+              "sa-f0a0615d",
+              "role-06e81772",
+              "secret-6e330f52"
+            ],
+            "length": 4,
+            "entry_point": "api-server",
+            "crown_jewel": "prod-db-creds",
+            "total_risk": 35.3,
+            "severity": "CRITICAL"
+          },
+          {
+            "path": [
+              "pod-f43c07fc",
+              "sa-f0a0615d",
+              "role-06e81772",
+              "secret-4cabff04"
+            ],
+            "length": 4,
+            "entry_point": "api-server",
+            "crown_jewel": "aws-credentials",
+            "total_risk": 35.3,
+            "severity": "CRITICAL"
+          },
+          {
+            "path": [
+              "pod-f43c07fc",
+              "sa-f0a0615d",
+              "role-06e81772",
+              "secret-b11adc57"
+            ],
+            "length": 4,
+            "entry_point": "api-server",
+            "crown_jewel": "encryption-keys",
+            "total_risk": 35.3,
+            "severity": "CRITICAL"
+          },
+          {
+            "path": [
+              "pod-5ca6890f",
+              "sa-f0a0615d",
+              "role-23d14522",
+              "secret-6e330f52"
+            ],
+            "length": 4,
+            "entry_point": "data-processor",
+            "crown_jewel": "prod-db-creds",
+            "total_risk": 33.5,
+            "severity": "CRITICAL"
+          },
+          {
+            "path": [
+              "pod-5ca6890f",
+              "sa-f0a0615d",
+              "role-23d14522",
+              "secret-4cabff04"
+            ],
+            "length": 4,
+            "entry_point": "data-processor",
+            "crown_jewel": "aws-credentials",
+            "total_risk": 33.5,
+            "severity": "CRITICAL"
+          },
+          {
+            "path": [
+              "pod-5ca6890f",
+              "sa-f0a0615d",
+              "role-23d14522",
+              "secret-b11adc57"
+            ],
+            "length": 4,
+            "entry_point": "data-processor",
+            "crown_jewel": "encryption-keys",
+            "total_risk": 33.5,
+            "severity": "CRITICAL"
+          },
+          {
+            "path": [
+              "pod-f43c07fc",
+              "sa-f0a0615d",
+              "role-23d14522",
+              "secret-6e330f52"
+            ],
+            "length": 4,
+            "entry_point": "api-server",
+            "crown_jewel": "prod-db-creds",
+            "total_risk": 32.3,
+            "severity": "CRITICAL"
+          },
+          {
+            "path": [
+              "pod-f43c07fc",
+              "sa-f0a0615d",
+              "role-23d14522",
+              "secret-4cabff04"
+            ],
+            "length": 4,
+            "entry_point": "api-server",
+            "crown_jewel": "aws-credentials",
+            "total_risk": 32.3,
+            "severity": "CRITICAL"
+          },
+          {
+            "path": [
+              "pod-f43c07fc",
+              "sa-f0a0615d",
+              "role-23d14522",
+              "secret-b11adc57"
+            ],
+            "length": 4,
+            "entry_point": "api-server",
+            "crown_jewel": "encryption-keys",
+            "total_risk": 32.3,
+            "severity": "CRITICAL"
+          },
+          {
+            "path": [
+              "pod-e2dd9b42",
+              "sa-78f73342",
+              "role-23d14522",
+              "secret-6e330f52"
+            ],
+            "length": 4,
+            "entry_point": "web-frontend",
+            "crown_jewel": "prod-db-creds",
+            "total_risk": 32.1,
+            "severity": "CRITICAL"
+          },
+          {
+            "path": [
+              "pod-e2dd9b42",
+              "sa-78f73342",
+              "role-23d14522",
+              "secret-4cabff04"
+            ],
+            "length": 4,
+            "entry_point": "web-frontend",
+            "crown_jewel": "aws-credentials",
+            "total_risk": 32.1,
+            "severity": "CRITICAL"
+          },
+          {
+            "path": [
+              "pod-e2dd9b42",
+              "sa-78f73342",
+              "role-23d14522",
+              "secret-b11adc57"
+            ],
+            "length": 4,
+            "entry_point": "web-frontend",
+            "crown_jewel": "encryption-keys",
+            "total_risk": 32.1,
+            "severity": "CRITICAL"
+          }
+        ],
+        "HIGH": [],
+        "MEDIUM": [],
+        "LOW": []
+      },
+      "top_10_critical": [
+        {
+          "path": [
+            "pod-5ca6890f",
+            "sa-f0a0615d",
+            "role-06e81772",
+            "secret-6e330f52"
+          ],
+          "length": 4,
+          "entry_point": "data-processor",
+          "crown_jewel": "prod-db-creds",
+          "total_risk": 36.5,
+          "severity": "CRITICAL"
+        },
+        {
+          "path": [
+            "pod-5ca6890f",
+            "sa-f0a0615d",
+            "role-06e81772",
+            "secret-4cabff04"
+          ],
+          "length": 4,
+          "entry_point": "data-processor",
+          "crown_jewel": "aws-credentials",
+          "total_risk": 36.5,
+          "severity": "CRITICAL"
+        },
+        {
+          "path": [
+            "pod-5ca6890f",
+            "sa-f0a0615d",
+            "role-06e81772",
+            "secret-b11adc57"
+          ],
+          "length": 4,
+          "entry_point": "data-processor",
+          "crown_jewel": "encryption-keys",
+          "total_risk": 36.5,
+          "severity": "CRITICAL"
+        },
+        {
+          "path": [
+            "pod-f43c07fc",
+            "sa-f0a0615d",
+            "role-06e81772",
+            "secret-6e330f52"
+          ],
+          "length": 4,
+          "entry_point": "api-server",
+          "crown_jewel": "prod-db-creds",
+          "total_risk": 35.3,
+          "severity": "CRITICAL"
+        },
+        {
+          "path": [
+            "pod-f43c07fc",
+            "sa-f0a0615d",
+            "role-06e81772",
+            "secret-4cabff04"
+          ],
+          "length": 4,
+          "entry_point": "api-server",
+          "crown_jewel": "aws-credentials",
+          "total_risk": 35.3,
+          "severity": "CRITICAL"
+        },
+        {
+          "path": [
+            "pod-f43c07fc",
+            "sa-f0a0615d",
+            "role-06e81772",
+            "secret-b11adc57"
+          ],
+          "length": 4,
+          "entry_point": "api-server",
+          "crown_jewel": "encryption-keys",
+          "total_risk": 35.3,
+          "severity": "CRITICAL"
+        },
+        {
+          "path": [
+            "pod-5ca6890f",
+            "sa-f0a0615d",
+            "role-23d14522",
+            "secret-6e330f52"
+          ],
+          "length": 4,
+          "entry_point": "data-processor",
+          "crown_jewel": "prod-db-creds",
+          "total_risk": 33.5,
+          "severity": "CRITICAL"
+        },
+        {
+          "path": [
+            "pod-5ca6890f",
+            "sa-f0a0615d",
+            "role-23d14522",
+            "secret-4cabff04"
+          ],
+          "length": 4,
+          "entry_point": "data-processor",
+          "crown_jewel": "aws-credentials",
+          "total_risk": 33.5,
+          "severity": "CRITICAL"
+        },
+        {
+          "path": [
+            "pod-5ca6890f",
+            "sa-f0a0615d",
+            "role-23d14522",
+            "secret-b11adc57"
+          ],
+          "length": 4,
+          "entry_point": "data-processor",
+          "crown_jewel": "encryption-keys",
+          "total_risk": 33.5,
+          "severity": "CRITICAL"
+        },
+        {
+          "path": [
+            "pod-f43c07fc",
+            "sa-f0a0615d",
+            "role-23d14522",
+            "secret-6e330f52"
+          ],
+          "length": 4,
+          "entry_point": "api-server",
+          "crown_jewel": "prod-db-creds",
+          "total_risk": 32.3,
+          "severity": "CRITICAL"
+        }
+      ]
+    },
+    "critical_nodes": [
+      {
+        "node_id": "sa-f0a0615d",
+        "name": "svc-admin",
+        "type": "ServiceAccount",
+        "paths_broken": 12,
+        "impact_percentage": 80.0,
+        "criticality": "CRITICAL"
+      },
+      {
+        "node_id": "role-23d14522",
+        "name": "node-admin",
+        "type": "ClusterRole",
+        "paths_broken": 9,
+        "impact_percentage": 60.0,
+        "criticality": "CRITICAL"
+      },
+      {
+        "node_id": "role-06e81772",
+        "name": "cluster-admin",
+        "type": "ClusterRole",
+        "paths_broken": 6,
+        "impact_percentage": 40.0,
+        "criticality": "CRITICAL"
+      },
+      {
+        "node_id": "sa-78f73342",
+        "name": "svc-job-runner",
+        "type": "ServiceAccount",
+        "paths_broken": 3,
+        "impact_percentage": 20.0,
+        "criticality": "HIGH"
+      }
+    ],
+    "circular_permissions": {
+      "cycles_found": 0,
+      "cycles": [],
+      "high_risk_cycles": [],
+      "recommendations": [
+        "No circular permissions detected - good security posture"
+      ]
+    },
+    "cve_analysis": {
+      "total_pods_scanned": 20,
+      "vulnerable_pods_count": 20,
+      "vulnerable_pods": [
+        {
+          "pod_name": "api-server",
+          "pod_id": "pod-f43c07fc",
+          "namespace": "production",
+          "vulnerable": true,
+          "cve_id": "CVE-2021-36159",
+          "cvss_score": 5.3,
+          "severity": "MEDIUM",
+          "description": "libfetch out-of-bounds read",
+          "exploitability": "LOW",
+          "risk_level": "HIGH",
+          "recommendations": [
+            "Update image alpine:3.12 to a patched version",
+            "Consider adding network policy to restrict internet access",
+            "Implement Web Application Firewall (WAF)",
+            "Run pod in non-privileged mode if possible",
+            "Apply Pod Security Policy to restrict privileges"
+          ]
+        },
+        {
+          "pod_name": "web-frontend",
+          "pod_id": "pod-e2dd9b42",
+          "namespace": "default",
+          "vulnerable": true,
+          "cve_id": "CVE-2021-23017",
+          "cvss_score": 8.1,
+          "severity": "HIGH",
+          "description": "nginx resolver off-by-one buffer overflow",
+          "exploitability": "HIGH",
+          "risk_level": "CRITICAL",
+          "recommendations": [
+            "Update image nginx:1.19 to a patched version",
+            "Consider adding network policy to restrict internet access",
+            "Implement Web Application Firewall (WAF)",
+            "URGENT: Patch immediately - high exploitability",
+            "Enable runtime security monitoring"
+          ]
+        },
+        {
+          "pod_name": "auth-service",
+          "pod_id": "pod-48af3a71",
+          "namespace": "default",
+          "vulnerable": true,
+          "cve_id": "CVE-2021-32675",
+          "cvss_score": 7.5,
+          "severity": "HIGH",
+          "description": "Redis Lua script integer overflow",
+          "exploitability": "MEDIUM",
+          "risk_level": "CRITICAL",
+          "recommendations": [
+            "Update image redis:5.0 to a patched version",
+            "Consider adding network policy to restrict internet access",
+            "Implement Web Application Firewall (WAF)",
+            "Run pod in non-privileged mode if possible",
+            "Apply Pod Security Policy to restrict privileges"
+          ]
+        },
+        {
+          "pod_name": "payment-gateway",
+          "pod_id": "pod-85aa4a14",
+          "namespace": "production",
+          "vulnerable": true,
+          "cve_id": "CVE-2021-3711",
+          "cvss_score": 9.8,
+          "severity": "CRITICAL",
+          "description": "OpenSSL SM2 decryption buffer overflow",
+          "exploitability": "HIGH",
+          "risk_level": "CRITICAL",
+          "recommendations": [
+            "Update image ubuntu:18.04 to a patched version",
+            "Consider adding network policy to restrict internet access",
+            "Implement Web Application Firewall (WAF)",
+            "Run pod in non-privileged mode if possible",
+            "Apply Pod Security Policy to restrict privileges",
+            "URGENT: Patch immediately - high exploitability",
+            "Enable runtime security monitoring"
+          ]
+        },
+        {
+          "pod_name": "data-processor",
+          "pod_id": "pod-5ca6890f",
+          "namespace": "staging",
+          "vulnerable": true,
+          "cve_id": "CVE-2021-32027",
+          "cvss_score": 6.5,
+          "severity": "MEDIUM",
+          "description": "PostgreSQL buffer overflow",
+          "exploitability": "MEDIUM",
+          "risk_level": "CRITICAL",
+          "recommendations": [
+            "Update image postgres:12 to a patched version",
+            "Consider adding network policy to restrict internet access",
+            "Implement Web Application Firewall (WAF)",
+            "Run pod in non-privileged mode if possible",
+            "Apply Pod Security Policy to restrict privileges"
+          ]
+        },
+        {
+          "pod_name": "cache-service",
+          "pod_id": "pod-3d37df8a",
+          "namespace": "default",
+          "vulnerable": true,
+          "cve_id": "CVE-2021-36159",
+          "cvss_score": 5.3,
+          "severity": "MEDIUM",
+          "description": "libfetch out-of-bounds read",
+          "exploitability": "LOW",
+          "risk_level": "MEDIUM",
+          "recommendations": [
+            "Update image alpine:3.12 to a patched version"
+          ]
+        },
+        {
+          "pod_name": "monitoring-agent",
+          "pod_id": "pod-96c18300",
+          "namespace": "staging",
+          "vulnerable": true,
+          "cve_id": "CVE-2021-23017",
+          "cvss_score": 8.1,
+          "severity": "HIGH",
+          "description": "nginx resolver off-by-one buffer overflow",
+          "exploitability": "HIGH",
+          "risk_level": "HIGH",
+          "recommendations": [
+            "Update image nginx:1.19 to a patched version",
+            "URGENT: Patch immediately - high exploitability",
+            "Enable runtime security monitoring"
+          ]
+        },
+        {
+          "pod_name": "log-collector",
+          "pod_id": "pod-2bffafce",
+          "namespace": "production",
+          "vulnerable": true,
+          "cve_id": "CVE-2021-36159",
+          "cvss_score": 5.3,
+          "severity": "MEDIUM",
+          "description": "libfetch out-of-bounds read",
+          "exploitability": "LOW",
+          "risk_level": "MEDIUM",
+          "recommendations": [
+            "Update image alpine:3.12 to a patched version"
+          ]
+        },
+        {
+          "pod_name": "worker-1",
+          "pod_id": "pod-e0c74618",
+          "namespace": "default",
+          "vulnerable": true,
+          "cve_id": "CVE-2021-36159",
+          "cvss_score": 5.3,
+          "severity": "MEDIUM",
+          "description": "libfetch out-of-bounds read",
+          "exploitability": "LOW",
+          "risk_level": "MEDIUM",
+          "recommendations": [
+            "Update image alpine:3.12 to a patched version",
+            "Run pod in non-privileged mode if possible",
+            "Apply Pod Security Policy to restrict privileges"
+          ]
+        },
+        {
+          "pod_name": "worker-2",
+          "pod_id": "pod-fb2dd7b6",
+          "namespace": "production",
+          "vulnerable": true,
+          "cve_id": "CVE-2021-23017",
+          "cvss_score": 8.1,
+          "severity": "HIGH",
+          "description": "nginx resolver off-by-one buffer overflow",
+          "exploitability": "HIGH",
+          "risk_level": "CRITICAL",
+          "recommendations": [
+            "Update image nginx:1.19 to a patched version",
+            "Run pod in non-privileged mode if possible",
+            "Apply Pod Security Policy to restrict privileges",
+            "URGENT: Patch immediately - high exploitability",
+            "Enable runtime security monitoring"
+          ]
+        },
+        {
+          "pod_name": "scheduler",
+          "pod_id": "pod-7e078511",
+          "namespace": "default",
+          "vulnerable": true,
+          "cve_id": "CVE-2021-36159",
+          "cvss_score": 5.3,
+          "severity": "MEDIUM",
+          "description": "libfetch out-of-bounds read",
+          "exploitability": "LOW",
+          "risk_level": "MEDIUM",
+          "recommendations": [
+            "Update image alpine:3.12 to a patched version"
+          ]
+        },
+        {
+          "pod_name": "queue-manager",
+          "pod_id": "pod-9970acae",
+          "namespace": "staging",
+          "vulnerable": true,
+          "cve_id": "CVE-2021-3711",
+          "cvss_score": 9.8,
+          "severity": "CRITICAL",
+          "description": "OpenSSL SM2 decryption buffer overflow",
+          "exploitability": "HIGH",
+          "risk_level": "CRITICAL",
+          "recommendations": [
+            "Update image ubuntu:18.04 to a patched version",
+            "URGENT: Patch immediately - high exploitability",
+            "Enable runtime security monitoring"
+          ]
+        },
+        {
+          "pod_name": "ml-service",
+          "pod_id": "pod-82a5dfa8",
+          "namespace": "default",
+          "vulnerable": true,
+          "cve_id": "CVE-2021-23017",
+          "cvss_score": 8.1,
+          "severity": "HIGH",
+          "description": "nginx resolver off-by-one buffer overflow",
+          "exploitability": "HIGH",
+          "risk_level": "CRITICAL",
+          "recommendations": [
+            "Update image nginx:1.19 to a patched version",
+            "Run pod in non-privileged mode if possible",
+            "Apply Pod Security Policy to restrict privileges",
+            "URGENT: Patch immediately - high exploitability",
+            "Enable runtime security monitoring"
+          ]
+        },
+        {
+          "pod_name": "notification-service",
+          "pod_id": "pod-65736f33",
+          "namespace": "default",
+          "vulnerable": true,
+          "cve_id": "CVE-2021-3711",
+          "cvss_score": 9.8,
+          "severity": "CRITICAL",
+          "description": "OpenSSL SM2 decryption buffer overflow",
+          "exploitability": "HIGH",
+          "risk_level": "CRITICAL",
+          "recommendations": [
+            "Update image ubuntu:18.04 to a patched version",
+            "Run pod in non-privileged mode if possible",
+            "Apply Pod Security Policy to restrict privileges",
+            "URGENT: Patch immediately - high exploitability",
+            "Enable runtime security monitoring"
+          ]
+        },
+        {
+          "pod_name": "analytics-engine",
+          "pod_id": "pod-978201a4",
+          "namespace": "production",
+          "vulnerable": true,
+          "cve_id": "CVE-2021-36159",
+          "cvss_score": 5.3,
+          "severity": "MEDIUM",
+          "description": "libfetch out-of-bounds read",
+          "exploitability": "LOW",
+          "risk_level": "MEDIUM",
+          "recommendations": [
+            "Update image alpine:3.12 to a patched version"
+          ]
+        },
+        {
+          "pod_name": "backup-service",
+          "pod_id": "pod-44f7a7a6",
+          "namespace": "production",
+          "vulnerable": true,
+          "cve_id": "CVE-2021-23017",
+          "cvss_score": 8.1,
+          "severity": "HIGH",
+          "description": "nginx resolver off-by-one buffer overflow",
+          "exploitability": "HIGH",
+          "risk_level": "HIGH",
+          "recommendations": [
+            "Update image nginx:1.19 to a patched version",
+            "URGENT: Patch immediately - high exploitability",
+            "Enable runtime security monitoring"
+          ]
+        },
+        {
+          "pod_name": "cdn-proxy",
+          "pod_id": "pod-2e398f27",
+          "namespace": "default",
+          "vulnerable": true,
+          "cve_id": "CVE-2021-36159",
+          "cvss_score": 5.3,
+          "severity": "MEDIUM",
+          "description": "libfetch out-of-bounds read",
+          "exploitability": "LOW",
+          "risk_level": "MEDIUM",
+          "recommendations": [
+            "Update image alpine:3.12 to a patched version",
+            "Run pod in non-privileged mode if possible",
+            "Apply Pod Security Policy to restrict privileges"
+          ]
+        },
+        {
+          "pod_name": "database-proxy",
+          "pod_id": "pod-90ef0bcc",
+          "namespace": "staging",
+          "vulnerable": true,
+          "cve_id": "CVE-2021-3711",
+          "cvss_score": 9.8,
+          "severity": "CRITICAL",
+          "description": "OpenSSL SM2 decryption buffer overflow",
+          "exploitability": "HIGH",
+          "risk_level": "CRITICAL",
+          "recommendations": [
+            "Update image ubuntu:18.04 to a patched version",
+            "Run pod in non-privileged mode if possible",
+            "Apply Pod Security Policy to restrict privileges",
+            "URGENT: Patch immediately - high exploitability",
+            "Enable runtime security monitoring"
+          ]
+        },
+        {
+          "pod_name": "redis-master",
+          "pod_id": "pod-89808689",
+          "namespace": "default",
+          "vulnerable": true,
+          "cve_id": "CVE-2021-32675",
+          "cvss_score": 7.5,
+          "severity": "HIGH",
+          "description": "Redis Lua script integer overflow",
+          "exploitability": "MEDIUM",
+          "risk_level": "CRITICAL",
+          "recommendations": [
+            "Update image redis:5.0 to a patched version",
+            "Run pod in non-privileged mode if possible",
+            "Apply Pod Security Policy to restrict privileges"
+          ]
+        },
+        {
+          "pod_name": "etcd-node",
+          "pod_id": "pod-f16e1e3c",
+          "namespace": "staging",
+          "vulnerable": true,
+          "cve_id": "CVE-2021-23017",
+          "cvss_score": 8.1,
+          "severity": "HIGH",
+          "description": "nginx resolver off-by-one buffer overflow",
+          "exploitability": "HIGH",
+          "risk_level": "HIGH",
+          "recommendations": [
+            "Update image nginx:1.19 to a patched version",
+            "URGENT: Patch immediately - high exploitability",
+            "Enable runtime security monitoring"
+          ]
+        }
+      ],
+      "severity_distribution": {
+        "CRITICAL": 4,
+        "HIGH": 8,
+        "MEDIUM": 8,
+        "LOW": 0
+      },
+      "average_cvss_score": 7.3199999999999985,
+      "overall_risk": "CRITICAL",
+      "scan_timestamp": "2026-03-29T18:55:46.829301"
+    },
+    "risk_assessment": {
+      "overall_risk_score": 10.0,
+      "risk_level": "CRITICAL",
+      "breakdown": {
+        "cve_risk": 10.0,
+        "attack_path_risk": 10.0,
+        "configuration_risk": 10.0
+      },
+      "cve_details": {
+        "total_pods_scanned": 20,
+        "vulnerable_pods_count": 20,
+        "vulnerable_pods": [
+          {
+            "pod_name": "api-server",
+            "pod_id": "pod-f43c07fc",
+            "namespace": "production",
+            "vulnerable": true,
+            "cve_id": "CVE-2021-36159",
+            "cvss_score": 5.3,
+            "severity": "MEDIUM",
+            "description": "libfetch out-of-bounds read",
+            "exploitability": "LOW",
+            "risk_level": "HIGH",
+            "recommendations": [
+              "Update image alpine:3.12 to a patched version",
+              "Consider adding network policy to restrict internet access",
+              "Implement Web Application Firewall (WAF)",
+              "Run pod in non-privileged mode if possible",
+              "Apply Pod Security Policy to restrict privileges"
+            ]
+          },
+          {
+            "pod_name": "web-frontend",
+            "pod_id": "pod-e2dd9b42",
+            "namespace": "default",
+            "vulnerable": true,
+            "cve_id": "CVE-2021-23017",
+            "cvss_score": 8.1,
+            "severity": "HIGH",
+            "description": "nginx resolver off-by-one buffer overflow",
+            "exploitability": "HIGH",
+            "risk_level": "CRITICAL",
+            "recommendations": [
+              "Update image nginx:1.19 to a patched version",
+              "Consider adding network policy to restrict internet access",
+              "Implement Web Application Firewall (WAF)",
+              "URGENT: Patch immediately - high exploitability",
+              "Enable runtime security monitoring"
+            ]
+          },
+          {
+            "pod_name": "auth-service",
+            "pod_id": "pod-48af3a71",
+            "namespace": "default",
+            "vulnerable": true,
+            "cve_id": "CVE-2021-32675",
+            "cvss_score": 7.5,
+            "severity": "HIGH",
+            "description": "Redis Lua script integer overflow",
+            "exploitability": "MEDIUM",
+            "risk_level": "CRITICAL",
+            "recommendations": [
+              "Update image redis:5.0 to a patched version",
+              "Consider adding network policy to restrict internet access",
+              "Implement Web Application Firewall (WAF)",
+              "Run pod in non-privileged mode if possible",
+              "Apply Pod Security Policy to restrict privileges"
+            ]
+          },
+          {
+            "pod_name": "payment-gateway",
+            "pod_id": "pod-85aa4a14",
+            "namespace": "production",
+            "vulnerable": true,
+            "cve_id": "CVE-2021-3711",
+            "cvss_score": 9.8,
+            "severity": "CRITICAL",
+            "description": "OpenSSL SM2 decryption buffer overflow",
+            "exploitability": "HIGH",
+            "risk_level": "CRITICAL",
+            "recommendations": [
+              "Update image ubuntu:18.04 to a patched version",
+              "Consider adding network policy to restrict internet access",
+              "Implement Web Application Firewall (WAF)",
+              "Run pod in non-privileged mode if possible",
+              "Apply Pod Security Policy to restrict privileges",
+              "URGENT: Patch immediately - high exploitability",
+              "Enable runtime security monitoring"
+            ]
+          },
+          {
+            "pod_name": "data-processor",
+            "pod_id": "pod-5ca6890f",
+            "namespace": "staging",
+            "vulnerable": true,
+            "cve_id": "CVE-2021-32027",
+            "cvss_score": 6.5,
+            "severity": "MEDIUM",
+            "description": "PostgreSQL buffer overflow",
+            "exploitability": "MEDIUM",
+            "risk_level": "CRITICAL",
+            "recommendations": [
+              "Update image postgres:12 to a patched version",
+              "Consider adding network policy to restrict internet access",
+              "Implement Web Application Firewall (WAF)",
+              "Run pod in non-privileged mode if possible",
+              "Apply Pod Security Policy to restrict privileges"
+            ]
+          },
+          {
+            "pod_name": "cache-service",
+            "pod_id": "pod-3d37df8a",
+            "namespace": "default",
+            "vulnerable": true,
+            "cve_id": "CVE-2021-36159",
+            "cvss_score": 5.3,
+            "severity": "MEDIUM",
+            "description": "libfetch out-of-bounds read",
+            "exploitability": "LOW",
+            "risk_level": "MEDIUM",
+            "recommendations": [
+              "Update image alpine:3.12 to a patched version"
+            ]
+          },
+          {
+            "pod_name": "monitoring-agent",
+            "pod_id": "pod-96c18300",
+            "namespace": "staging",
+            "vulnerable": true,
+            "cve_id": "CVE-2021-23017",
+            "cvss_score": 8.1,
+            "severity": "HIGH",
+            "description": "nginx resolver off-by-one buffer overflow",
+            "exploitability": "HIGH",
+            "risk_level": "HIGH",
+            "recommendations": [
+              "Update image nginx:1.19 to a patched version",
+              "URGENT: Patch immediately - high exploitability",
+              "Enable runtime security monitoring"
+            ]
+          },
+          {
+            "pod_name": "log-collector",
+            "pod_id": "pod-2bffafce",
+            "namespace": "production",
+            "vulnerable": true,
+            "cve_id": "CVE-2021-36159",
+            "cvss_score": 5.3,
+            "severity": "MEDIUM",
+            "description": "libfetch out-of-bounds read",
+            "exploitability": "LOW",
+            "risk_level": "MEDIUM",
+            "recommendations": [
+              "Update image alpine:3.12 to a patched version"
+            ]
+          },
+          {
+            "pod_name": "worker-1",
+            "pod_id": "pod-e0c74618",
+            "namespace": "default",
+            "vulnerable": true,
+            "cve_id": "CVE-2021-36159",
+            "cvss_score": 5.3,
+            "severity": "MEDIUM",
+            "description": "libfetch out-of-bounds read",
+            "exploitability": "LOW",
+            "risk_level": "MEDIUM",
+            "recommendations": [
+              "Update image alpine:3.12 to a patched version",
+              "Run pod in non-privileged mode if possible",
+              "Apply Pod Security Policy to restrict privileges"
+            ]
+          },
+          {
+            "pod_name": "worker-2",
+            "pod_id": "pod-fb2dd7b6",
+            "namespace": "production",
+            "vulnerable": true,
+            "cve_id": "CVE-2021-23017",
+            "cvss_score": 8.1,
+            "severity": "HIGH",
+            "description": "nginx resolver off-by-one buffer overflow",
+            "exploitability": "HIGH",
+            "risk_level": "CRITICAL",
+            "recommendations": [
+              "Update image nginx:1.19 to a patched version",
+              "Run pod in non-privileged mode if possible",
+              "Apply Pod Security Policy to restrict privileges",
+              "URGENT: Patch immediately - high exploitability",
+              "Enable runtime security monitoring"
+            ]
+          },
+          {
+            "pod_name": "scheduler",
+            "pod_id": "pod-7e078511",
+            "namespace": "default",
+            "vulnerable": true,
+            "cve_id": "CVE-2021-36159",
+            "cvss_score": 5.3,
+            "severity": "MEDIUM",
+            "description": "libfetch out-of-bounds read",
+            "exploitability": "LOW",
+            "risk_level": "MEDIUM",
+            "recommendations": [
+              "Update image alpine:3.12 to a patched version"
+            ]
+          },
+          {
+            "pod_name": "queue-manager",
+            "pod_id": "pod-9970acae",
+            "namespace": "staging",
+            "vulnerable": true,
+            "cve_id": "CVE-2021-3711",
+            "cvss_score": 9.8,
+            "severity": "CRITICAL",
+            "description": "OpenSSL SM2 decryption buffer overflow",
+            "exploitability": "HIGH",
+            "risk_level": "CRITICAL",
+            "recommendations": [
+              "Update image ubuntu:18.04 to a patched version",
+              "URGENT: Patch immediately - high exploitability",
+              "Enable runtime security monitoring"
+            ]
+          },
+          {
+            "pod_name": "ml-service",
+            "pod_id": "pod-82a5dfa8",
+            "namespace": "default",
+            "vulnerable": true,
+            "cve_id": "CVE-2021-23017",
+            "cvss_score": 8.1,
+            "severity": "HIGH",
+            "description": "nginx resolver off-by-one buffer overflow",
+            "exploitability": "HIGH",
+            "risk_level": "CRITICAL",
+            "recommendations": [
+              "Update image nginx:1.19 to a patched version",
+              "Run pod in non-privileged mode if possible",
+              "Apply Pod Security Policy to restrict privileges",
+              "URGENT: Patch immediately - high exploitability",
+              "Enable runtime security monitoring"
+            ]
+          },
+          {
+            "pod_name": "notification-service",
+            "pod_id": "pod-65736f33",
+            "namespace": "default",
+            "vulnerable": true,
+            "cve_id": "CVE-2021-3711",
+            "cvss_score": 9.8,
+            "severity": "CRITICAL",
+            "description": "OpenSSL SM2 decryption buffer overflow",
+            "exploitability": "HIGH",
+            "risk_level": "CRITICAL",
+            "recommendations": [
+              "Update image ubuntu:18.04 to a patched version",
+              "Run pod in non-privileged mode if possible",
+              "Apply Pod Security Policy to restrict privileges",
+              "URGENT: Patch immediately - high exploitability",
+              "Enable runtime security monitoring"
+            ]
+          },
+          {
+            "pod_name": "analytics-engine",
+            "pod_id": "pod-978201a4",
+            "namespace": "production",
+            "vulnerable": true,
+            "cve_id": "CVE-2021-36159",
+            "cvss_score": 5.3,
+            "severity": "MEDIUM",
+            "description": "libfetch out-of-bounds read",
+            "exploitability": "LOW",
+            "risk_level": "MEDIUM",
+            "recommendations": [
+              "Update image alpine:3.12 to a patched version"
+            ]
+          },
+          {
+            "pod_name": "backup-service",
+            "pod_id": "pod-44f7a7a6",
+            "namespace": "production",
+            "vulnerable": true,
+            "cve_id": "CVE-2021-23017",
+            "cvss_score": 8.1,
+            "severity": "HIGH",
+            "description": "nginx resolver off-by-one buffer overflow",
+            "exploitability": "HIGH",
+            "risk_level": "HIGH",
+            "recommendations": [
+              "Update image nginx:1.19 to a patched version",
+              "URGENT: Patch immediately - high exploitability",
+              "Enable runtime security monitoring"
+            ]
+          },
+          {
+            "pod_name": "cdn-proxy",
+            "pod_id": "pod-2e398f27",
+            "namespace": "default",
+            "vulnerable": true,
+            "cve_id": "CVE-2021-36159",
+            "cvss_score": 5.3,
+            "severity": "MEDIUM",
+            "description": "libfetch out-of-bounds read",
+            "exploitability": "LOW",
+            "risk_level": "MEDIUM",
+            "recommendations": [
+              "Update image alpine:3.12 to a patched version",
+              "Run pod in non-privileged mode if possible",
+              "Apply Pod Security Policy to restrict privileges"
+            ]
+          },
+          {
+            "pod_name": "database-proxy",
+            "pod_id": "pod-90ef0bcc",
+            "namespace": "staging",
+            "vulnerable": true,
+            "cve_id": "CVE-2021-3711",
+            "cvss_score": 9.8,
+            "severity": "CRITICAL",
+            "description": "OpenSSL SM2 decryption buffer overflow",
+            "exploitability": "HIGH",
+            "risk_level": "CRITICAL",
+            "recommendations": [
+              "Update image ubuntu:18.04 to a patched version",
+              "Run pod in non-privileged mode if possible",
+              "Apply Pod Security Policy to restrict privileges",
+              "URGENT: Patch immediately - high exploitability",
+              "Enable runtime security monitoring"
+            ]
+          },
+          {
+            "pod_name": "redis-master",
+            "pod_id": "pod-89808689",
+            "namespace": "default",
+            "vulnerable": true,
+            "cve_id": "CVE-2021-32675",
+            "cvss_score": 7.5,
+            "severity": "HIGH",
+            "description": "Redis Lua script integer overflow",
+            "exploitability": "MEDIUM",
+            "risk_level": "CRITICAL",
+            "recommendations": [
+              "Update image redis:5.0 to a patched version",
+              "Run pod in non-privileged mode if possible",
+              "Apply Pod Security Policy to restrict privileges"
+            ]
+          },
+          {
+            "pod_name": "etcd-node",
+            "pod_id": "pod-f16e1e3c",
+            "namespace": "staging",
+            "vulnerable": true,
+            "cve_id": "CVE-2021-23017",
+            "cvss_score": 8.1,
+            "severity": "HIGH",
+            "description": "nginx resolver off-by-one buffer overflow",
+            "exploitability": "HIGH",
+            "risk_level": "HIGH",
+            "recommendations": [
+              "Update image nginx:1.19 to a patched version",
+              "URGENT: Patch immediately - high exploitability",
+              "Enable runtime security monitoring"
+            ]
+          }
+        ],
+        "severity_distribution": {
+          "CRITICAL": 4,
+          "HIGH": 8,
+          "MEDIUM": 8,
+          "LOW": 0
+        },
+        "average_cvss_score": 7.3199999999999985,
+        "overall_risk": "CRITICAL",
+        "scan_timestamp": "2026-03-29T18:55:46.829337"
+      },
+      "recommendations": [
+        "\ud83d\udea8 CRITICAL: Immediate action required to secure cluster",
+        "Patch 20 vulnerable pod(s) with known CVEs",
+        "Block 10 critical attack path(s) leading to sensitive resources",
+        "Implement Network Policies to segment workloads",
+        "Apply Pod Security Standards to restrict container privileges",
+        "Enable audit logging for RBAC and resource access"
+      ]
+    },
+    "cluster_name": "prod-cluster",
+    "timestamp": "2026-03-29T18:55:46.789833"
+  },
+  "metadata": {
+    "created_at": "2026-03-29T18:59:42.696883",
+    "total_nodes": 57,
+    "risk_level": "UNKNOWN"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "Pod-A": ["ServiceAccount-B"],
+  "ServiceAccount-B": ["Role-X"],
+  "Role-X": ["Secret-Y"],
+  "Secret-Y": ["Database"]
+}
