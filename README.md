@@ -110,5 +110,9 @@ This project is developed for hackathon purposes and is currently unlicensed/ope
 ![Screenshot 1](Screenshot%202026-04-05%20105316.png)
 ![Screenshot 2](Screenshot%202026-04-05%20105322.png)
 ![Image](image.png)
+![Homepage](Homepage.png)
+![Analysis Page](Analysis_page.png)
+![Recommendation Page](Recommandation_page.png)
+![Report Page](report_page.png)
 
 **NOTE:** ALL THE FEATURES THAT HAS BEEN ASKED ARE ACHIEVED WITH PERFECT ACCURACY ALONG THE CHALLENGES FEATURES AS WELL USING THE PROPER MOCK DATA GIVEN BY THE ORGANISATION PANEL.
