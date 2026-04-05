@@ -1,0 +1,2503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClusterNode — Kubernetes Security Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js"></script>
+<style>
+:root {
+  --bg: #050a0f;
+  --bg2: #080f17;
+  --bg3: #0c1620;
+  --panel: #0e1a26;
+  --panel2: #111e2c;
+  --border: #1a2d42;
+  --border2: #1f3550;
+  --accent: #00d4ff;
+  --accent2: #0080ff;
+  --accent3: #00ff9d;
+  --warn: #ff8c00;
+  --danger: #ff2d55;
+  --critical: #ff0040;
+  --high: #ff6b00;
+  --medium: #ffd700;
+  --low: #00cc88;
+  --purple: #cc44ff;
+  --text: #c8daea;
+  --text2: #7a9bb8;
+  --text3: #4a6480;
+  --glow: 0 0 20px rgba(0,212,255,0.15);
+  --glow2: 0 0 40px rgba(0,212,255,0.08);
+  --font-display: 'Syne', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-body: 'Space Mono', monospace;
+  --radius: 8px;
+  --radius2: 12px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+  pointer-events: none; z-index: 9999;
+}
+
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none; z-index: 0;
+}
+
+.app { display: flex; height: 100vh; position: relative; z-index: 1; }
+
+/* ─── SIDEBAR ─── */
+.sidebar {
+  width: 220px; min-width: 220px;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  position: fixed; left: 0; top: 0; bottom: 0;
+  z-index: 100;
+}
+
+.sidebar-logo { padding: 24px 20px 20px; border-bottom: 1px solid var(--border); }
+.logo-mark { display: flex; align-items: center; gap: 10px; }
+.logo-icon {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 0 20px rgba(0,212,255,0.4);
+  position: relative; overflow: hidden;
+}
+.logo-icon::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.15));
+}
+.logo-text { font-family: var(--font-display); font-size: 18px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+.logo-sub { font-size: 9px; color: var(--text3); letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
+
+.sidebar-status {
+  padding: 12px 20px;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; color: var(--text3);
+  border-bottom: 1px solid var(--border);
+}
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text3); transition: all 0.3s; }
+.status-dot.online { background: var(--accent3); box-shadow: 0 0 8px var(--accent3); animation: pulse-dot 2s infinite; }
+.status-dot.error { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+@keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+.sidebar-nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+.nav-section { padding: 8px 20px 4px; font-size: 9px; color: var(--text3); letter-spacing: 2px; text-transform: uppercase; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 20px;
+  cursor: pointer; color: var(--text2); font-size: 12px;
+  transition: all 0.2s; border-left: 2px solid transparent;
+}
+.nav-item:hover { background: rgba(0,212,255,0.05); color: var(--text); }
+.nav-item.active { background: rgba(0,212,255,0.08); color: var(--accent); border-left-color: var(--accent); }
+.nav-icon { font-size: 15px; width: 18px; text-align: center; }
+.nav-badge {
+  margin-left: auto;
+  background: var(--danger); color: #fff;
+  font-size: 9px; padding: 2px 6px; border-radius: 10px;
+  font-family: var(--font-mono);
+}
+.nav-badge.warn { background: var(--warn); }
+.nav-badge.ok { background: var(--low); }
+.nav-badge.purple { background: var(--purple); }
+
+.sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); }
+.api-url-input {
+  width: 100%;
+  background: var(--bg3); border: 1px solid var(--border);
+  color: var(--text); padding: 6px 8px; border-radius: var(--radius);
+  font-family: var(--font-mono); font-size: 10px; margin-top: 8px; outline: none;
+}
+.api-url-input:focus { border-color: var(--accent); }
+
+/* ─── MAIN ─── */
+.main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; overflow: hidden; height: 100vh; }
+
+/* ─── TOPBAR ─── */
+.topbar {
+  height: 56px; background: var(--bg2); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 24px; gap: 16px; flex-shrink: 0;
+}
+.page-title { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: #fff; flex: 1; }
+.topbar-stats { display: flex; gap: 16px; }
+.topbar-stat { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text2); }
+.topbar-stat .value { font-family: var(--font-mono); font-weight: 700; color: var(--accent); }
+.topbar-stat .value.danger { color: var(--danger); }
+.topbar-stat .value.warn { color: var(--warn); }
+.topbar-stat .value.ok { color: var(--accent3); }
+
+/* ─── BUTTONS ─── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: var(--radius);
+  font-family: var(--font-body); font-size: 12px;
+  cursor: pointer; border: none; transition: all 0.2s;
+  font-weight: 700; letter-spacing: 0.5px;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #000; box-shadow: 0 0 20px rgba(0,212,255,0.3);
+}
+.btn-primary:hover { box-shadow: 0 0 30px rgba(0,212,255,0.5); transform: translateY(-1px); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text2); }
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+.btn-danger { background: rgba(255,45,85,0.15); border: 1px solid rgba(255,45,85,0.4); color: var(--danger); }
+.btn-danger:hover { background: rgba(255,45,85,0.25); }
+.btn-success { background: rgba(0,255,157,0.12); border: 1px solid rgba(0,255,157,0.3); color: var(--accent3); }
+.btn-success:hover { background: rgba(0,255,157,0.2); }
+.btn-purple { background: rgba(204,68,255,0.12); border: 1px solid rgba(204,68,255,0.3); color: var(--purple); }
+.btn-purple:hover { background: rgba(204,68,255,0.2); }
+.btn-sm { padding: 5px 10px; font-size: 11px; }
+
+/* ─── CONTENT ─── */
+.content { flex: 1; overflow-y: auto; }
+.page { display: none; padding: 24px; }
+.page.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.fade-in { animation: fadeIn 0.3s ease; }
+
+/* ─── CARDS ─── */
+.card {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--radius2); overflow: hidden;
+  margin-bottom: 16px;
+}
+.card-header {
+  padding: 14px 18px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.card-title { font-family: var(--font-display); font-size: 13px; font-weight: 700; color: #fff; flex: 1; }
+.card-body { padding: 16px 18px; }
+.card-actions { display: flex; gap: 8px; align-items: center; }
+
+/* ─── STAT CARDS ─── */
+.stat-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+.stat-card {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--radius2); padding: 16px 18px;
+}
+.stat-card.danger { border-color: rgba(255,0,64,0.3); background: rgba(255,0,64,0.05); }
+.stat-card.warn { border-color: rgba(255,140,0,0.3); background: rgba(255,140,0,0.05); }
+.stat-card.ok { border-color: rgba(0,204,136,0.3); background: rgba(0,204,136,0.05); }
+.stat-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px; }
+.stat-val { font-family: var(--font-display); font-size: 32px; font-weight: 800; color: #fff; }
+.stat-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+/* ─── GRID ─── */
+.grid { display: grid; }
+.grid-2 { grid-template-columns: 1fr 1fr; }
+.grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+/* ─── BADGES ─── */
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px; border-radius: 4px;
+  font-size: 10px; font-family: var(--font-mono); font-weight: 700; letter-spacing: 0.5px;
+}
+.badge-critical { background: rgba(255,0,64,0.2); color: var(--critical); border: 1px solid rgba(255,0,64,0.3); }
+.badge-high { background: rgba(255,107,0,0.2); color: var(--high); border: 1px solid rgba(255,107,0,0.3); }
+.badge-medium { background: rgba(255,215,0,0.15); color: var(--medium); border: 1px solid rgba(255,215,0,0.25); }
+.badge-low { background: rgba(0,204,136,0.15); color: var(--low); border: 1px solid rgba(0,204,136,0.25); }
+.badge-info { background: rgba(0,212,255,0.1); color: var(--accent); border: 1px solid rgba(0,212,255,0.2); }
+.badge-ok { background: rgba(0,255,157,0.1); color: var(--accent3); border: 1px solid rgba(0,255,157,0.2); }
+.badge-purple { background: rgba(204,68,255,0.15); color: var(--purple); border: 1px solid rgba(204,68,255,0.3); }
+
+/* ─── PATH CHAINS ─── */
+.path-chain {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 4px;
+  padding: 10px 12px; border-radius: var(--radius);
+  border: 1px solid var(--border); cursor: pointer; transition: all 0.15s;
+}
+.path-chain:hover { border-color: var(--border2); background: var(--panel); }
+.path-node {
+  background: var(--bg3); border: 1px solid var(--border2);
+  padding: 3px 10px; border-radius: 4px;
+  font-family: var(--font-mono); font-size: 10px; color: var(--text);
+}
+.path-arrow { color: var(--text3); font-size: 12px; }
+
+/* ─── TABS ─── */
+.tabs { display: flex; border-bottom: 1px solid var(--border); padding: 0 18px; gap: 2px; flex-shrink: 0; background: var(--panel); }
+.tab {
+  padding: 10px 16px; font-size: 11px; color: var(--text2);
+  cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: all 0.15s; white-space: nowrap;
+}
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); background: var(--panel2); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* ─── TABLE ─── */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th { padding: 10px 12px; text-align: left; font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); font-weight: 400; }
+td { padding: 10px 12px; font-size: 12px; border-bottom: 1px solid rgba(26,45,66,0.5); }
+tr:hover td { background: rgba(0,212,255,0.02); }
+
+/* ─── PROGRESS ─── */
+.progress-bar { background: var(--bg3); border-radius: 2px; height: 4px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 2px; transition: width 0.5s; }
+.progress-fill.danger { background: linear-gradient(90deg, var(--critical), var(--high)); }
+.progress-fill.warn { background: linear-gradient(90deg, var(--high), var(--medium)); }
+
+/* ─── GRAPH ─── */
+.graph-container {
+  position: relative; background: var(--panel);
+  border: 1px solid var(--border); border-radius: var(--radius2); overflow: hidden;
+}
+#cy { width: 100%; height: 100%; }
+.graph-toolbar {
+  position: absolute; top: 12px; right: 12px;
+  display: flex; gap: 4px; flex-direction: column; z-index: 10;
+}
+.graph-toolbar-btn {
+  width: 32px; height: 32px; border-radius: var(--radius);
+  background: var(--panel2); border: 1px solid var(--border);
+  color: var(--text2); font-size: 14px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.graph-toolbar-btn:hover { border-color: var(--accent); color: var(--accent); }
+.graph-legend {
+  position: absolute; bottom: 12px; left: 12px;
+  background: rgba(8,15,23,0.9); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 10px 14px;
+  display: flex; flex-wrap: wrap; gap: 10px; z-index: 10; max-width: 400px;
+}
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--text2); }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+/* ─── CODE ─── */
+.code-block {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 16px;
+  font-family: var(--font-mono); font-size: 11px; line-height: 1.7;
+  overflow: auto; max-height: 400px; white-space: pre-wrap;
+}
+.json-key { color: #7a9bb8; }
+.json-string { color: #00ff9d; }
+.json-number { color: #ffd700; }
+.json-bool { color: #ff8c00; }
+.json-null { color: #ff2d55; }
+
+/* ─── LOADER ─── */
+.loader { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 40px; color: var(--text3); }
+.spinner {
+  width: 20px; height: 20px; border: 2px solid var(--border);
+  border-top-color: var(--accent); border-radius: 50%;
+  animation: spin 0.8s linear infinite; flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── EMPTY STATE ─── */
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; text-align: center; }
+.empty-icon { font-size: 40px; margin-bottom: 16px; }
+.empty-sub { color: var(--text3); font-size: 12px; margin-top: 8px; }
+
+/* ─── CVE ITEMS ─── */
+.cve-item { display: flex; gap: 14px; padding: 14px; border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 8px; align-items: flex-start; }
+.cve-score { width: 52px; height: 52px; border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 20px; font-weight: 800; flex-shrink: 0; }
+.score-critical { background: rgba(255,0,64,0.15); color: var(--critical); border: 1px solid rgba(255,0,64,0.3); }
+.score-high { background: rgba(255,107,0,0.15); color: var(--high); border: 1px solid rgba(255,107,0,0.3); }
+.score-medium { background: rgba(255,215,0,0.1); color: var(--medium); border: 1px solid rgba(255,215,0,0.2); }
+.score-low { background: rgba(0,204,136,0.1); color: var(--low); border: 1px solid rgba(0,204,136,0.2); }
+.cve-info { flex: 1; }
+.cve-id { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+.cve-desc { font-size: 11px; color: var(--text2); margin-bottom: 6px; }
+.cve-meta { display: flex; flex-wrap: wrap; gap: 8px; font-size: 11px; color: var(--text3); align-items: center; }
+
+/* ─── DETAIL DRAWER ─── */
+.detail-drawer {
+  position: fixed; right: -420px; top: 0; bottom: 0; width: 400px;
+  background: var(--bg2); border-left: 1px solid var(--border);
+  z-index: 200; transition: right 0.3s ease; overflow-y: auto;
+  display: flex; flex-direction: column;
+}
+.detail-drawer.open { right: 0; }
+.detail-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 12px; }
+.detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(26,45,66,0.4); font-size: 12px; gap: 16px; }
+.detail-key { color: var(--text3); flex-shrink: 0; }
+.detail-val { color: var(--text); text-align: right; font-family: var(--font-mono); font-size: 11px; word-break: break-all; }
+
+/* ─── NOTIFICATION ─── */
+#notification {
+  position: fixed; bottom: 20px; right: 20px;
+  z-index: 9998; display: flex; flex-direction: column; gap: 8px; max-width: 380px;
+}
+.notif {
+  padding: 12px 16px; border-radius: var(--radius);
+  display: flex; gap: 10px; align-items: flex-start;
+  animation: slideIn 0.3s ease; border: 1px solid var(--border);
+  background: var(--panel2); box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+.notif.success { border-color: rgba(0,255,157,0.3); background: rgba(0,255,157,0.05); }
+.notif.error { border-color: rgba(255,45,85,0.3); background: rgba(255,45,85,0.05); }
+.notif.warning { border-color: rgba(255,140,0,0.3); background: rgba(255,140,0,0.05); }
+.notif.info { border-color: rgba(0,212,255,0.2); background: rgba(0,212,255,0.05); }
+@keyframes slideIn { from { opacity:0; transform: translateX(20px); } to { opacity:1; transform:none; } }
+
+/* ─── EDU STEPS ─── */
+.edu-step {
+  padding: 14px 16px; border: 1px solid var(--border);
+  border-radius: var(--radius); margin-bottom: 8px;
+  transition: all 0.2s; opacity: 0.5;
+}
+.edu-step.active { border-color: var(--accent); background: rgba(0,212,255,0.05); opacity: 1; }
+.edu-step.completed { border-color: var(--accent3); background: rgba(0,255,157,0.03); opacity: 0.7; }
+.step-num { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+.step-title { font-family: var(--font-display); font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+.step-desc { font-size: 11px; color: var(--text2); line-height: 1.6; margin-bottom: 10px; }
+
+/* ─── SIMULATOR ─── */
+.sim-timeline { display: flex; flex-direction: column; gap: 0; }
+.sim-event {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 10px 0; position: relative;
+}
+.sim-event::before {
+  content: '';
+  position: absolute; left: 16px; top: 32px; bottom: -10px;
+  width: 2px; background: var(--border);
+}
+.sim-event:last-child::before { display: none; }
+.sim-dot {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; flex-shrink: 0; z-index: 1;
+  border: 2px solid var(--border);
+}
+.sim-dot.entry { background: rgba(0,255,157,0.15); border-color: var(--accent3); }
+.sim-dot.pivot { background: rgba(255,140,0,0.15); border-color: var(--warn); }
+.sim-dot.escalate { background: rgba(255,0,64,0.15); border-color: var(--critical); }
+.sim-dot.crown { background: rgba(255,0,64,0.3); border-color: var(--critical); box-shadow: 0 0 12px var(--critical); }
+.sim-content { flex: 1; padding-top: 6px; }
+.sim-node { font-family: var(--font-mono); font-size: 12px; color: #fff; margin-bottom: 2px; }
+.sim-detail { font-size: 11px; color: var(--text3); }
+
+/* ─── RECOMMEND ─── */
+.rec-card {
+  display: flex; gap: 14px; align-items: flex-start;
+  padding: 14px 16px; border: 1px solid var(--border);
+  border-radius: var(--radius); margin-bottom: 8px;
+  transition: border-color 0.15s;
+}
+.rec-card:hover { border-color: var(--border2); }
+.rec-priority { width: 8px; border-radius: 2px; flex-shrink: 0; align-self: stretch; }
+.rec-priority.critical { background: var(--critical); }
+.rec-priority.high { background: var(--high); }
+.rec-priority.medium { background: var(--medium); }
+.rec-priority.low { background: var(--low); }
+.rec-body { flex: 1; }
+.rec-title { font-size: 13px; color: #fff; font-weight: 700; margin-bottom: 4px; }
+.rec-desc { font-size: 11px; color: var(--text2); line-height: 1.6; }
+.rec-meta { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+
+/* ─── SNAPSHOT ─── */
+.snap-card {
+  display: flex; gap: 12px; align-items: center;
+  padding: 12px 16px; border: 1px solid var(--border);
+  border-radius: var(--radius); margin-bottom: 8px;
+  cursor: pointer; transition: border-color 0.15s;
+}
+.snap-card:hover { border-color: var(--border2); }
+.snap-icon { font-size: 20px; flex-shrink: 0; }
+.snap-info { flex: 1; }
+.snap-id { font-family: var(--font-mono); font-size: 11px; color: var(--accent); margin-bottom: 2px; }
+.snap-time { font-size: 11px; color: var(--text3); }
+
+/* ─── AI CHAT ─── */
+.chat-container { display: flex; flex-direction: column; height: 500px; }
+.chat-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.chat-msg { max-width: 80%; padding: 10px 14px; border-radius: var(--radius2); font-size: 12px; line-height: 1.6; }
+.chat-msg.user { background: rgba(0,212,255,0.1); border: 1px solid rgba(0,212,255,0.2); align-self: flex-end; color: var(--text); }
+.chat-msg.ai { background: var(--panel2); border: 1px solid var(--border); align-self: flex-start; color: var(--text2); }
+.chat-msg.ai .msg-label { font-size: 10px; color: var(--accent3); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; }
+.chat-input-row { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; gap: 8px; }
+.chat-input {
+  flex: 1; background: var(--bg3); border: 1px solid var(--border);
+  color: var(--text); padding: 8px 12px; border-radius: var(--radius);
+  font-family: var(--font-body); font-size: 12px; outline: none;
+}
+.chat-input:focus { border-color: var(--accent); }
+
+/* ─── YAML DISPLAY ─── */
+.yaml-block {
+  background: var(--bg3); border: 1px solid rgba(0,255,157,0.2);
+  border-radius: var(--radius); padding: 14px;
+  font-family: var(--font-mono); font-size: 11px; line-height: 1.8;
+  white-space: pre-wrap; overflow: auto; color: var(--accent3);
+  max-height: 350px;
+}
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 1100px) {
+  .stat-cards { grid-template-columns: repeat(2, 1fr); }
+  .grid-3 { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 768px) {
+  .sidebar { width: 60px; min-width: 60px; }
+  .logo-text, .logo-sub, .nav-section, .sidebar-footer { display: none; }
+  .nav-item { padding: 14px; justify-content: center; }
+  .nav-icon { width: auto; }
+  .main { margin-left: 60px; }
+  .stat-cards { grid-template-columns: 1fr 1fr; }
+  .topbar-stats { display: none; }
+  .nav-badge { display: none; }
+}
+
+/* ─── DIFF TABLE ─── */
+.diff-added { color: var(--accent3); background: rgba(0,255,157,0.05); }
+.diff-removed { color: var(--danger); background: rgba(255,45,85,0.05); text-decoration: line-through; }
+.diff-changed { color: var(--warn); background: rgba(255,140,0,0.05); }
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ─── SIDEBAR ─── -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">
+      <div class="logo-icon">⬡</div>
+      <div>
+        <div class="logo-text">ClusterNode</div>
+        <div class="logo-sub">K8s Security</div>
+      </div>
+    </div>
+  </div>
+  <div class="sidebar-status">
+    <div class="status-dot" id="conn-dot"></div>
+    <span id="conn-label">Offline</span>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Overview</div>
+    <div class="nav-item active" id="nav-dashboard" onclick="navigate('dashboard')">
+      <span class="nav-icon">◈</span> Dashboard
+    </div>
+
+    <div class="nav-section">Visualization</div>
+    <div class="nav-item" id="nav-graph" onclick="navigate('graph')">
+      <span class="nav-icon">⬡</span> Cluster Graph
+    </div>
+    <div class="nav-item" id="nav-simulator" onclick="navigate('simulator')">
+      <span class="nav-icon">⚡</span> Attack Simulator
+      <span class="nav-badge purple" id="sim-badge">NEW</span>
+    </div>
+    <div class="nav-item" id="nav-playthrough" onclick="navigate('playthrough')">
+      <span class="nav-icon">▶</span> Playthrough
+    </div>
+
+    <div class="nav-section">Analysis</div>
+    <div class="nav-item" id="nav-attack-paths" onclick="navigate('attack-paths')">
+      <span class="nav-icon">⚡</span> Attack Paths
+      <span class="nav-badge" id="attack-badge">0</span>
+    </div>
+    <div class="nav-item" id="nav-bfs" onclick="navigate('bfs')">
+      <span class="nav-icon">⊕</span> Blast Radius
+    </div>
+    <div class="nav-item" id="nav-dfs" onclick="navigate('dfs')">
+      <span class="nav-icon">⊗</span> Circ. Perms
+    </div>
+    <div class="nav-item" id="nav-cluster-nodes" onclick="navigate('cluster-nodes')">
+      <span class="nav-icon">◉</span> Critical Nodes
+    </div>
+    <div class="nav-item" id="nav-vuln-scan" onclick="navigate('vuln-scan')">
+      <span class="nav-icon">🔍</span> CVE Scan
+      <span class="nav-badge warn" id="vuln-badge">0</span>
+    </div>
+
+    <div class="nav-section">Intelligence</div>
+    <div class="nav-item" id="nav-recommendations" onclick="navigate('recommendations')">
+      <span class="nav-icon">💡</span> Recommendations
+      <span class="nav-badge ok" id="rec-badge">AI</span>
+    </div>
+    <div class="nav-item" id="nav-ai-chat" onclick="navigate('ai-chat')">
+      <span class="nav-icon">🤖</span> AI Chat
+    </div>
+
+    <div class="nav-section">Data</div>
+    <div class="nav-item" id="nav-snapshots" onclick="navigate('snapshots')">
+      <span class="nav-icon">📸</span> Snapshots
+    </div>
+    <div class="nav-item" id="nav-reports" onclick="navigate('reports')">
+      <span class="nav-icon">📄</span> Reports
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div style="font-size:10px; color:var(--text3); margin-bottom:4px;">API ENDPOINT</div>
+    <input class="api-url-input" id="api-base" value="http://localhost:8001" placeholder="http://localhost:8001">
+  </div>
+</aside>
+
+<!-- ─── MAIN ─── -->
+<main class="main">
+  <div class="topbar">
+    <div class="page-title" id="page-title">Dashboard</div>
+    <div class="topbar-stats">
+      <div class="topbar-stat"><span>Nodes</span><span class="value" id="stat-nodes">—</span></div>
+      <div class="topbar-stat"><span>Paths</span><span class="value danger" id="stat-paths">—</span></div>
+      <div class="topbar-stat"><span>CVEs</span><span class="value warn" id="stat-cves">—</span></div>
+      <div class="topbar-stat"><span>Risk</span><span class="value" id="stat-risk">—</span></div>
+    </div>
+    <button class="btn btn-primary btn-sm" id="analyze-btn" onclick="runAnalysis()">▶ Run Analysis</button>
+  </div>
+
+  <div class="content">
+
+    <!-- ─── DASHBOARD ─── -->
+    <div class="page active" id="page-dashboard">
+      <div class="stat-cards">
+        <div class="stat-card" id="dc-risk">
+          <div class="stat-label">Risk Level</div>
+          <div class="stat-val" id="dc-risk-val">—</div>
+          <div class="stat-sub" id="dc-risk-sub">Run analysis first</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Graph Nodes</div>
+          <div class="stat-val" id="dc-nodes-val">—</div>
+          <div class="stat-sub" id="dc-nodes-sub">0 edges, 0 namespaces</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Attack Paths</div>
+          <div class="stat-val" id="dc-paths-val">—</div>
+          <div class="stat-sub" id="dc-paths-sub">0 critical paths</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Vulnerable Pods</div>
+          <div class="stat-val" id="dc-vuln-val">—</div>
+          <div class="stat-sub">From CVE scan</div>
+        </div>
+      </div>
+
+      <div class="grid grid-2" style="gap:16px;">
+        <div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Graph Statistics</div>
+              <div class="card-actions">
+                <button class="btn btn-ghost btn-sm" onclick="navigate('graph')">View Graph →</button>
+              </div>
+            </div>
+            <div class="card-body" id="dc-graph-stats">
+              <div class="empty-state">
+                <div class="empty-icon">⬡</div>
+                <div class="empty-sub">Run analysis to see graph statistics</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Top Critical Paths</div>
+              <div class="card-actions">
+                <button class="btn btn-ghost btn-sm" onclick="navigate('attack-paths')">All paths →</button>
+              </div>
+            </div>
+            <div class="card-body" id="dc-top-paths">
+              <div class="empty-state">
+                <div class="empty-sub">Run analysis to see top critical attack paths</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Risk Assessment</div>
+              <div id="dc-risk-badge"></div>
+              <div class="card-actions">
+                <button class="btn btn-ghost btn-sm" onclick="navigate('recommendations')">Recommendations →</button>
+              </div>
+            </div>
+            <div class="card-body" id="dc-risk-body">
+              <div class="empty-state">
+                <div class="empty-icon">🛡️</div>
+                <div class="empty-sub">Run analysis to see risk assessment</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Quick Actions</div>
+            </div>
+            <div class="card-body">
+              <div style="display:flex; flex-direction:column; gap:8px;">
+                <button class="btn btn-primary" style="width:100%;" id="analyze-btn2" onclick="runAnalysis()">▶ Run Full Analysis</button>
+                <button class="btn btn-purple" style="width:100%;" onclick="navigate('simulator')">⚡ Open Attack Simulator</button>
+                <button class="btn btn-success" style="width:100%;" onclick="downloadPDFReport()">⬇ Download PDF Report</button>
+                <button class="btn btn-ghost" style="width:100%;" onclick="createSnapshot()">📸 Create Snapshot</button>
+                <button class="btn btn-ghost" style="width:100%;" onclick="navigate('ai-chat')">🤖 Ask AI Analyst</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── GRAPH ─── -->
+    <div class="page" id="page-graph" style="padding:0; display:flex; flex-direction:column;">
+      <div class="tabs" id="graph-tabs">
+        <div class="tab active" onclick="switchGraphLayout('cose')">Force Layout</div>
+        <div class="tab" onclick="switchGraphLayout('breadthfirst')">BFS Layout</div>
+        <div class="tab" onclick="switchGraphLayout('concentric')">Concentric</div>
+        <div class="tab" onclick="switchGraphLayout('grid')">Grid</div>
+        <div style="margin-left:auto; display:flex; gap:8px; align-items:center; padding-right:8px;">
+          <button class="btn btn-ghost btn-sm" onclick="downloadGraphJSON()">⬇ Export JSON</button>
+          <button class="btn btn-ghost btn-sm" onclick="downloadGraphPNG()">⬇ Export PNG</button>
+        </div>
+      </div>
+      <div class="graph-container" style="flex:1; border:none; border-radius:0;">
+        <div id="cy" style="width:100%;height:100%;"></div>
+        <div class="graph-toolbar">
+          <button class="graph-toolbar-btn" onclick="cyInstance && cyInstance.zoom(cyInstance.zoom()*1.2)">+</button>
+          <button class="graph-toolbar-btn" onclick="cyInstance && cyInstance.zoom(cyInstance.zoom()*0.8)">−</button>
+          <button class="graph-toolbar-btn" onclick="fitGraph()">⊞</button>
+          <button class="graph-toolbar-btn" onclick="resetGraph()">↺</button>
+        </div>
+        <div class="graph-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#00d4ff;"></div>Pod</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#00ff9d;"></div>ServiceAccount</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#ff8c00;"></div>Role</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#ff2d55;"></div>Secret</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#ff6b00;"></div>ClusterRole</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#cc44ff;"></div>RoleBinding</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#ff0040; box-shadow:0 0 6px #ff0040;"></div>Crown Jewel</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#00ff9d; box-shadow:0 0 6px #00ff9d;"></div>Entry Point</div>
+        </div>
+        <div id="cy-empty" class="empty-state" style="position:absolute;inset:0;background:var(--panel);">
+          <div class="empty-icon">⬡</div>
+          <div style="font-family:var(--font-display); font-size:16px; color:var(--text);">No Graph Data</div>
+          <div class="empty-sub">Run analysis from the dashboard to generate the cluster graph</div>
+          <button class="btn btn-primary" style="margin-top:16px;" onclick="runAnalysis()">▶ Run Analysis</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── ATTACK SIMULATOR ─── -->
+    <div class="page" id="page-simulator">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">⚡ Attack Simulator</div>
+          <div class="card-actions">
+            <span style="font-size:11px; color:var(--text3);">Simulate an attack from any entry point node</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;">
+            <input id="sim-node-input" placeholder="Enter node ID (e.g. pod-nginx-frontend)" style="flex:1; min-width:200px; background:var(--bg3); border:1px solid var(--border); color:var(--text); padding:8px 12px; border-radius:var(--radius); font-family:var(--font-mono); font-size:12px; outline:none;">
+            <button class="btn btn-primary" onclick="runSimulation()">⚡ Simulate Attack</button>
+            <button class="btn btn-ghost" onclick="populateEntryPoint()">Auto-select Entry</button>
+          </div>
+          <div id="sim-results">
+            <div class="empty-state">
+              <div class="empty-icon">⚡</div>
+              <div style="font-family:var(--font-display); font-size:15px; color:var(--text);">Attack Simulator Ready</div>
+              <div class="empty-sub">Run analysis first, then select a node to simulate an attack from</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-2" style="gap:16px;" id="sim-detail-panels" style="display:none;">
+        <div class="card" id="sim-timeline-card" style="display:none;">
+          <div class="card-header">
+            <div class="card-title">Kill Chain Timeline</div>
+            <div id="sim-crown-badge"></div>
+          </div>
+          <div class="card-body" id="sim-timeline-body"></div>
+        </div>
+        <div class="card" id="sim-paths-card" style="display:none;">
+          <div class="card-header">
+            <div class="card-title">Paths to Crown Jewels</div>
+            <div id="sim-paths-count"></div>
+          </div>
+          <div class="card-body" id="sim-paths-body"></div>
+        </div>
+      </div>
+
+      <div class="card" id="sim-raw-card" style="display:none;">
+        <div class="card-header">
+          <div class="card-title">Raw Response</div>
+          <button class="btn btn-ghost btn-sm" onclick="copyCode('sim-raw')">Copy</button>
+        </div>
+        <div class="card-body">
+          <pre class="code-block" id="sim-raw"></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── PLAYTHROUGH ─── -->
+    <div class="page" id="page-playthrough">
+      <div class="grid grid-2" style="gap:16px;">
+        <div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Educational Playthrough</div>
+              <div class="card-actions">
+                <button class="btn btn-ghost btn-sm" id="play-btn" onclick="togglePlay()">▶</button>
+                <button class="btn btn-ghost btn-sm" onclick="nextStep()">Next</button>
+                <button class="btn btn-ghost btn-sm" onclick="resetPlay()">↺</button>
+              </div>
+            </div>
+            <div class="card-body" style="padding:0;">
+              <div style="padding:12px 18px; background:var(--bg3); border-bottom:1px solid var(--border);">
+                <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:11px; color:var(--text3);">
+                  <span id="play-step-title">Ready to Start</span>
+                  <span id="play-step-counter">Step 0 of 7</span>
+                </div>
+                <div class="progress-bar" style="height:3px;">
+                  <div class="progress-fill" id="play-progress" style="width:0%;"></div>
+                </div>
+              </div>
+              <div style="position:relative; height:300px;">
+                <canvas id="play-canvas" style="width:100%;height:100%;"></canvas>
+                <div id="play-desc" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:20px;">
+                  <div style="font-size:32px; margin-bottom:12px;">🛡️</div>
+                  <div style="font-size:16px; font-weight:700; color:#fff; margin-bottom:8px;">ClusterNode Playthrough</div>
+                  <div style="color:var(--text2);">Press ▶ or click Next to begin</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="card" style="max-height:500px; overflow-y:auto;">
+            <div class="card-header"><div class="card-title">Concept Steps</div></div>
+            <div class="card-body" id="play-steps-list" style="padding:12px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── BFS ─── -->
+    <div class="page" id="page-bfs">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">⊕ BFS — Blast Radius</div>
+          <div id="bfs-severity-badge"></div>
+        </div>
+        <div class="card-body">
+          <div style="display:flex; gap:8px; margin-bottom:16px;">
+            <input id="bfs-node-input" placeholder="Node ID" style="flex:1; background:var(--bg3); border:1px solid var(--border); color:var(--text); padding:8px 12px; border-radius:var(--radius); font-family:var(--font-mono); font-size:12px; outline:none;">
+            <button class="btn btn-primary" onclick="runBFS()">⊕ Run BFS</button>
+          </div>
+          <div id="bfs-results">
+            <div class="empty-state">
+              <div class="empty-icon">⊕</div>
+              <div class="empty-sub">Select a node from the graph or type its ID to run BFS blast radius analysis</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card" id="bfs-reachable-card" style="display:none;">
+        <div class="card-header">
+          <div class="card-title">Reachable Nodes</div>
+          <div id="bfs-count-badge"></div>
+        </div>
+        <div class="card-body" style="padding:0;">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Name</th><th>Type</th><th>Hops</th><th>Risk</th><th>Crown Jewel</th></tr></thead>
+              <tbody id="bfs-table"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Raw JSON</div>
+          <button class="btn btn-ghost btn-sm" onclick="copyCode('bfs-raw')">Copy</button>
+        </div>
+        <div class="card-body"><pre class="code-block" id="bfs-raw">Run BFS first...</pre></div>
+      </div>
+    </div>
+
+    <!-- ─── DFS ─── -->
+    <div class="page" id="page-dfs">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">⊗ DFS — Circular Permission Detection</div>
+          <div id="dfs-count"></div>
+          <div class="card-actions">
+            <button class="btn btn-primary btn-sm" onclick="runDFS()">⊗ Run DFS</button>
+          </div>
+        </div>
+        <div class="card-body" id="dfs-results">
+          <div class="empty-state">
+            <div class="empty-icon">⊗</div>
+            <div class="empty-sub">Run DFS to detect circular permission chains</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Raw JSON</div><button class="btn btn-ghost btn-sm" onclick="copyCode('dfs-raw')">Copy</button></div>
+        <div class="card-body"><pre class="code-block" id="dfs-raw">Run DFS first...</pre></div>
+      </div>
+    </div>
+
+    <!-- ─── ATTACK PATHS ─── -->
+    <div class="page" id="page-attack-paths">
+      <div class="grid grid-3" style="gap:12px; margin-bottom:16px;">
+        <div class="stat-card danger"><div class="stat-label">Critical</div><div class="stat-val" id="ap-critical">—</div></div>
+        <div class="stat-card warn"><div class="stat-label">High</div><div class="stat-val" id="ap-high">—</div></div>
+        <div class="stat-card"><div class="stat-label">Medium</div><div class="stat-val" id="ap-medium">—</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Attack Paths</div>
+          <div id="ap-total-badge"></div>
+        </div>
+        <div class="tabs" id="attack-severity-tabs" style="border-radius:0; border-left:none; border-right:none; border-top:none;">
+          <div class="tab active" onclick="filterAttackPaths('ALL')">All</div>
+          <div class="tab" onclick="filterAttackPaths('CRITICAL')">Critical</div>
+          <div class="tab" onclick="filterAttackPaths('HIGH')">High</div>
+          <div class="tab" onclick="filterAttackPaths('MEDIUM')">Medium</div>
+          <div class="tab" onclick="filterAttackPaths('LOW')">Low</div>
+        </div>
+        <div class="card-body" id="attack-paths-list">
+          <div class="empty-state"><div class="empty-icon">⚡</div><div class="empty-sub">Run analysis to see attack paths</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Raw JSON</div><button class="btn btn-ghost btn-sm" onclick="copyCode('ap-raw')">Copy</button></div>
+        <div class="card-body"><pre class="code-block" id="ap-raw">Run analysis first...</pre></div>
+      </div>
+    </div>
+
+    <!-- ─── CLUSTER NODES ─── -->
+    <div class="page" id="page-cluster-nodes">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">◉ Critical Cluster Nodes</div>
+          <div class="card-actions">
+            <button class="btn btn-ghost btn-sm" onclick="downloadCriticalNodesCSV()">⬇ CSV</button>
+          </div>
+        </div>
+        <div class="card-body" id="cn-list">
+          <div class="empty-state"><div class="empty-icon">◉</div><div class="empty-sub">Run analysis to see critical nodes</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Raw JSON</div><button class="btn btn-ghost btn-sm" onclick="copyCode('cn-raw')">Copy</button></div>
+        <div class="card-body"><pre class="code-block" id="cn-raw">Run analysis first...</pre></div>
+      </div>
+    </div>
+
+    <!-- ─── VULN SCAN ─── -->
+    <div class="page" id="page-vuln-scan">
+      <div class="grid" style="grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:16px;">
+        <div class="stat-card danger"><div class="stat-label">Critical CVEs</div><div class="stat-val" id="vs-critical">—</div></div>
+        <div class="stat-card warn"><div class="stat-label">High CVEs</div><div class="stat-val" id="vs-high">—</div></div>
+        <div class="stat-card"><div class="stat-label">Vuln Pods</div><div class="stat-val" id="vs-pods">—</div></div>
+        <div class="stat-card"><div class="stat-label">Total Scanned</div><div class="stat-val" id="vs-total">—</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🔍 Vulnerability Findings</div>
+          <div class="card-actions">
+            <button class="btn btn-ghost btn-sm" onclick="downloadCVEReport()">⬇ CSV Report</button>
+          </div>
+        </div>
+        <div class="card-body" id="vs-list">
+          <div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-sub">Run analysis to see CVE findings</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Raw JSON</div><button class="btn btn-ghost btn-sm" onclick="copyCode('vs-raw')">Copy</button></div>
+        <div class="card-body"><pre class="code-block" id="vs-raw">Run analysis first...</pre></div>
+      </div>
+    </div>
+
+    <!-- ─── RECOMMENDATIONS ─── -->
+    <div class="page" id="page-recommendations">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">💡 AI Security Recommendations</div>
+          <div class="card-actions">
+            <button class="btn btn-ghost btn-sm" onclick="refreshRecommendations()">↺ Refresh</button>
+            <button class="btn btn-ghost btn-sm" onclick="downloadRecommendations()">⬇ Export</button>
+          </div>
+        </div>
+        <div class="card-body" id="rec-list">
+          <div class="empty-state">
+            <div class="empty-icon">💡</div>
+            <div style="font-family:var(--font-display); font-size:15px; color:var(--text);">Run Analysis First</div>
+            <div class="empty-sub">Recommendations are generated from your cluster analysis data</div>
+            <button class="btn btn-primary" style="margin-top:16px;" onclick="runAnalysis()">▶ Run Analysis</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="fix-card" style="display:none;">
+        <div class="card-header">
+          <div class="card-title">🔧 Auto-Fix YAML Generator</div>
+          <div class="card-actions">
+            <button class="btn btn-ghost btn-sm" onclick="downloadFix()">⬇ Download YAML</button>
+            <button class="btn btn-ghost btn-sm" onclick="copyCode('fix-yaml')">Copy</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;">
+            <select id="fix-issue-type" style="background:var(--bg3); border:1px solid var(--border); color:var(--text); padding:8px 12px; border-radius:var(--radius); font-family:var(--font-mono); font-size:11px; outline:none;">
+              <option value="privilege_escalation">Privilege Escalation</option>
+              <option value="exposed_secret">Exposed Secret</option>
+              <option value="overprivileged_sa">Overprivileged ServiceAccount</option>
+              <option value="host_path_mount">HostPath Mount</option>
+              <option value="unrestricted_rbac">Unrestricted RBAC</option>
+              <option value="network_policy_missing">Missing NetworkPolicy</option>
+            </select>
+            <button class="btn btn-success" onclick="generateFix()">Generate Fix YAML</button>
+          </div>
+          <pre class="yaml-block" id="fix-yaml">Select an issue type and click Generate...</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── AI CHAT ─── -->
+    <div class="page" id="page-ai-chat">
+      <div class="card" style="overflow:hidden;">
+        <div class="card-header">
+          <div class="card-title">🤖 AI Security Analyst</div>
+          <div style="font-size:11px; color:var(--text3);">Powered by Google Gemini Flash 2.0</div>
+        </div>
+        <div class="chat-container">
+          <div class="chat-messages" id="chat-messages">
+            <div class="chat-msg ai">
+              <div class="msg-label">Gemini AI</div>
+              Hello! I'm your AI security analyst. Ask me anything about your Kubernetes cluster security, CVEs, attack paths, or remediation steps.
+            </div>
+          </div>
+          <div class="chat-input-row">
+            <input class="chat-input" id="chat-input" placeholder="Ask about your cluster security..." onkeydown="if(event.key==='Enter')sendChat()">
+            <button class="btn btn-primary" onclick="sendChat()">Send</button>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;">
+        <button class="btn btn-ghost btn-sm" onclick="askPreset('What are the highest risk attack paths in this cluster?')">Highest risk paths</button>
+        <button class="btn btn-ghost btn-sm" onclick="askPreset('Explain the critical CVEs found and their impact')">Explain CVEs</button>
+        <button class="btn btn-ghost btn-sm" onclick="askPreset('What should I fix first to reduce risk?')">Priority fixes</button>
+        <button class="btn btn-ghost btn-sm" onclick="askPreset('Are there any privilege escalation risks?')">Privilege escalation</button>
+        <button class="btn btn-ghost btn-sm" onclick="askPreset('Generate an executive security summary')">Executive summary</button>
+      </div>
+    </div>
+
+    <!-- ─── SNAPSHOTS ─── -->
+    <div class="page" id="page-snapshots">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📸 Cluster Snapshots</div>
+          <div class="card-actions">
+            <button class="btn btn-success btn-sm" onclick="createSnapshot()">+ New Snapshot</button>
+            <button class="btn btn-ghost btn-sm" onclick="loadSnapshots()">↺ Refresh</button>
+          </div>
+        </div>
+        <div class="card-body" id="snap-list">
+          <div class="loader"><div class="spinner"></div>Loading snapshots...</div>
+        </div>
+      </div>
+
+      <div class="card" id="snap-compare-card">
+        <div class="card-header">
+          <div class="card-title">Compare Snapshots</div>
+        </div>
+        <div class="card-body">
+          <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+            <input id="snap-id1" placeholder="Snapshot ID 1" style="flex:1; min-width:140px; background:var(--bg3); border:1px solid var(--border); color:var(--text); padding:7px 10px; border-radius:var(--radius); font-family:var(--font-mono); font-size:11px; outline:none;">
+            <span style="color:var(--text3);">vs</span>
+            <input id="snap-id2" placeholder="Snapshot ID 2" style="flex:1; min-width:140px; background:var(--bg3); border:1px solid var(--border); color:var(--text); padding:7px 10px; border-radius:var(--radius); font-family:var(--font-mono); font-size:11px; outline:none;">
+            <button class="btn btn-primary btn-sm" onclick="compareSnapshots()">Compare</button>
+          </div>
+          <div id="snap-diff-result" style="margin-top:16px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── REPORTS ─── -->
+    <div class="page" id="page-reports">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📄 Reports & Exports</div>
+        </div>
+        <div class="card-body">
+          <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:12px;">
+
+            <div style="border:1px solid var(--border); border-radius:var(--radius2); padding:20px;">
+              <div style="font-size:32px; margin-bottom:10px;">📋</div>
+              <div style="font-family:var(--font-display); font-weight:700; color:#fff; margin-bottom:6px;">PDF Security Report</div>
+              <div style="font-size:11px; color:var(--text2); margin-bottom:14px; line-height:1.6;">Full kill-chain analysis with CVE inventory, attack paths, critical nodes, and executive summary.</div>
+              <button class="btn btn-primary" style="width:100%;" onclick="downloadPDFReport()">⬇ Download PDF</button>
+            </div>
+
+            <div style="border:1px solid var(--border); border-radius:var(--radius2); padding:20px;">
+              <div style="font-size:32px; margin-bottom:10px;">🗂️</div>
+              <div style="font-family:var(--font-display); font-weight:700; color:#fff; margin-bottom:6px;">Graph Data (JSON)</div>
+              <div style="font-size:11px; color:var(--text2); margin-bottom:14px; line-height:1.6;">Export full cluster graph as JSON for external tooling, integration, or archiving.</div>
+              <button class="btn btn-ghost" style="width:100%;" onclick="downloadGraphJSON()">⬇ Export Graph JSON</button>
+            </div>
+
+            <div style="border:1px solid var(--border); border-radius:var(--radius2); padding:20px;">
+              <div style="font-size:32px; margin-bottom:10px;">🔍</div>
+              <div style="font-family:var(--font-display); font-weight:700; color:#fff; margin-bottom:6px;">CVE Report (CSV)</div>
+              <div style="font-size:11px; color:var(--text2); margin-bottom:14px; line-height:1.6;">Downloadable spreadsheet of all CVE findings with severity, CVSS scores, and affected pods.</div>
+              <button class="btn btn-ghost" style="width:100%;" onclick="downloadCVEReport()">⬇ Export CVE CSV</button>
+            </div>
+
+            <div style="border:1px solid var(--border); border-radius:var(--radius2); padding:20px;">
+              <div style="font-size:32px; margin-bottom:10px;">⚡</div>
+              <div style="font-family:var(--font-display); font-weight:700; color:#fff; margin-bottom:6px;">Attack Paths (CSV)</div>
+              <div style="font-size:11px; color:var(--text2); margin-bottom:14px; line-height:1.6;">All detected attack paths with severity, length, and risk scores in CSV format.</div>
+              <button class="btn btn-ghost" style="width:100%;" onclick="downloadAttackPathsCSV()">⬇ Export Paths CSV</button>
+            </div>
+
+            <div style="border:1px solid var(--border); border-radius:var(--radius2); padding:20px;">
+              <div style="font-size:32px; margin-bottom:10px;">◉</div>
+              <div style="font-family:var(--font-display); font-weight:700; color:#fff; margin-bottom:6px;">Critical Nodes (CSV)</div>
+              <div style="font-size:11px; color:var(--text2); margin-bottom:14px; line-height:1.6;">Critical node ranking with impact scores, paths broken, and criticality levels.</div>
+              <button class="btn btn-ghost" style="width:100%;" onclick="downloadCriticalNodesCSV()">⬇ Export Nodes CSV</button>
+            </div>
+
+            <div style="border:1px solid var(--border); border-radius:var(--radius2); padding:20px;">
+              <div style="font-size:32px; margin-bottom:10px;">💡</div>
+              <div style="font-family:var(--font-display); font-weight:700; color:#fff; margin-bottom:6px;">Recommendations (JSON)</div>
+              <div style="font-size:11px; color:var(--text2); margin-bottom:14px; line-height:1.6;">Full list of prioritized security recommendations from AI analysis.</div>
+              <button class="btn btn-ghost" style="width:100%;" onclick="downloadRecommendations()">⬇ Export JSON</button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</main>
+
+<!-- ─── NODE DETAIL DRAWER ─── -->
+<div class="detail-drawer" id="node-detail">
+  <div class="detail-header">
+    <div style="flex:1;">
+      <div style="font-family:var(--font-display); font-size:15px; font-weight:800; color:#fff; margin-bottom:4px;" id="nd-name">Node</div>
+      <div id="nd-type"></div>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="closeNodeDetail()">✕</button>
+  </div>
+  <div style="padding:16px;" id="nd-body"></div>
+  <div style="padding:16px; border-top:1px solid var(--border);">
+    <button class="btn btn-primary btn-sm" style="width:100%; margin-bottom:8px;" onclick="runBFSFromDetail()">⊕ Run BFS from this node</button>
+    <button class="btn btn-purple btn-sm" style="width:100%; margin-bottom:8px;" onclick="runSimulateFromDetail()">⚡ Simulate Attack</button>
+    <button class="btn btn-ghost btn-sm" style="width:100%;" onclick="highlightInGraph()">⬡ Highlight in Graph</button>
+  </div>
+</div>
+
+<div id="notification"></div>
+
+<script>
+// ─── STATE ───
+const state = {
+  apiBase: 'http://localhost:8001',
+  analysisData: null,
+  graphData: null,
+  attackPaths: null,
+  cveScan: null,
+  criticalNodes: null,
+  selectedNode: null,
+  currentPage: 'dashboard',
+  playStep: 0,
+  playPlaying: false,
+  playInterval: null,
+  allAttackPaths: [],
+  currentFilter: 'ALL',
+  snapshots: [],
+  recommendations: [],
+};
+
+let cyInstance = null;
+
+// ─── INIT ───
+document.addEventListener('DOMContentLoaded', () => {
+  const savedUrl = localStorage.getItem('clusternode-api') || 'http://localhost:8001';
+  document.getElementById('api-base').value = savedUrl;
+  state.apiBase = savedUrl;
+  
+  document.getElementById('api-base').addEventListener('change', e => {
+    state.apiBase = e.target.value.trim().replace(/\/$/, '');
+    localStorage.setItem('clusternode-api', state.apiBase);
+    checkHealth();
+  });
+
+  initPlaythrough();
+  checkHealth();
+  renderPlaySteps();
+  loadSnapshots();
+});
+
+// ─── HEALTH CHECK ───
+async function checkHealth() {
+  const dot = document.getElementById('conn-dot');
+  const label = document.getElementById('conn-label');
+  dot.className = 'status-dot';
+  label.textContent = 'Connecting...';
+  try {
+    const r = await fetch(`${state.apiBase}/`, { signal: AbortSignal.timeout(3000) });
+    if (r.ok) {
+      dot.className = 'status-dot online';
+      label.textContent = 'Connected';
+    } else throw new Error();
+  } catch {
+    dot.className = 'status-dot error';
+    label.textContent = 'Offline';
+  }
+}
+
+// ─── NAVIGATION ───
+function navigate(page) {
+  state.currentPage = page;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+  const pageEl = document.getElementById(`page-${page}`);
+  if (pageEl) { pageEl.classList.add('active'); pageEl.classList.add('fade-in'); setTimeout(() => pageEl.classList.remove('fade-in'), 500); }
+
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick') === `navigate('${page}')`) n.classList.add('active');
+  });
+
+  const titles = {
+    dashboard:'Dashboard', graph:'Cluster Graph', simulator:'Attack Simulator',
+    playthrough:'Educational Playthrough', bfs:'BFS — Blast Radius', dfs:'DFS — Circular Permissions',
+    'attack-paths':'Attack Paths', 'cluster-nodes':'Critical Cluster Nodes',
+    'vuln-scan':'Vulnerability Scan (CVE)', recommendations:'AI Recommendations',
+    'ai-chat':'AI Security Analyst', snapshots:'Snapshots', reports:'Reports & Exports'
+  };
+  document.getElementById('page-title').textContent = titles[page] || page;
+
+  if (page === 'graph' && state.graphData) renderGraph();
+  if (page === 'attack-paths') loadAttackPaths();
+  if (page === 'cluster-nodes') loadClusterNodes();
+  if (page === 'vuln-scan') loadCVEScan();
+  if (page === 'dfs') loadDFSData();
+  if (page === 'recommendations') loadRecommendations();
+  if (page === 'snapshots') loadSnapshots();
+}
+
+// ─── API HELPER ───
+async function api(path, options = {}) {
+  const r = await fetch(`${state.apiBase}${path}`, {
+    headers: { 'Content-Type': 'application/json' },
+    ...options
+  });
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({ detail: r.statusText }));
+    throw new Error(err.detail || r.statusText);
+  }
+  return r.json();
+}
+
+// ─── RUN ANALYSIS ───
+async function runAnalysis() {
+  const btn = document.getElementById('analyze-btn');
+  const btn2 = document.getElementById('analyze-btn2');
+  btn.textContent = '⟳ Analyzing...'; btn.disabled = true;
+  if (btn2) { btn2.textContent = '⟳ Analyzing...'; btn2.disabled = true; }
+
+  showNotif('Running comprehensive cluster analysis...', 'info');
+
+  try {
+    const data = await api('/api/analyze');
+    state.analysisData = data.analysis;
+
+    const gs = data.analysis.graph_statistics || {};
+    const ap = data.analysis.attack_paths || {};
+    const cv = data.analysis.cve_analysis || {};
+    const risk = data.analysis.risk_assessment || {};
+
+    document.getElementById('stat-nodes').textContent = gs.total_nodes || '—';
+    document.getElementById('stat-paths').textContent = ap.total_paths || '—';
+    document.getElementById('stat-cves').textContent = cv.vulnerable_pods_count || '—';
+    const rl = risk.risk_level || '—';
+    const riskEl = document.getElementById('stat-risk');
+    riskEl.textContent = rl;
+    riskEl.className = 'value ' + ({'CRITICAL':'danger','HIGH':'warn','MEDIUM':'warn','LOW':'ok'}[rl] || '');
+
+    document.getElementById('attack-badge').textContent = ap.by_severity?.critical_count || 0;
+    document.getElementById('attack-badge').className = 'nav-badge ' + (ap.by_severity?.critical_count > 0 ? '' : 'ok');
+    document.getElementById('vuln-badge').textContent = cv.vulnerable_pods_count || '0';
+
+    updateDashboard(data);
+    await loadGraphData();
+    document.getElementById('fix-card').style.display = '';
+    
+    showNotif(`Analysis complete! ${data.summary?.total_attack_paths || 0} attack paths found.`, 'success');
+  } catch (e) {
+    showNotif('Analysis failed: ' + e.message, 'error');
+  } finally {
+    btn.textContent = '▶ Run Analysis'; btn.disabled = false;
+    if (btn2) { btn2.textContent = '▶ Run Analysis'; btn2.disabled = false; }
+  }
+}
+
+// ─── UPDATE DASHBOARD ───
+function updateDashboard(data) {
+  const a = data.analysis;
+  const gs = a.graph_statistics || {};
+  const ap = a.attack_paths || {};
+  const cv = a.cve_analysis || {};
+  const risk = a.risk_assessment || {};
+  const rl = risk.risk_level || 'UNKNOWN';
+
+  const riskColors = { CRITICAL: 'danger', HIGH: 'warn', MEDIUM: 'warn', LOW: 'ok' };
+  document.getElementById('dc-risk').className = 'stat-card ' + (riskColors[rl] || '');
+  document.getElementById('dc-risk-val').textContent = rl;
+  document.getElementById('dc-risk-sub').textContent = 'Score: ' + (risk.overall_risk_score?.toFixed(1) || '—');
+  document.getElementById('dc-nodes-val').textContent = gs.total_nodes || '—';
+  document.getElementById('dc-nodes-sub').textContent = `${gs.total_edges || 0} edges, ${gs.namespaces || 0} namespaces`;
+  document.getElementById('dc-paths-val').textContent = ap.total_paths || '—';
+  document.getElementById('dc-paths-sub').textContent = (ap.by_severity?.critical_count || 0) + ' critical paths';
+  document.getElementById('dc-vuln-val').textContent = cv.vulnerable_pods_count || '—';
+
+  document.getElementById('dc-graph-stats').innerHTML = `
+    <div class="grid grid-2" style="gap:10px;">
+      ${[['Total Nodes', gs.total_nodes],['Total Edges', gs.total_edges],['Entry Points', gs.entry_points || '—'],['Crown Jewels', gs.crown_jewels || '—'],['Namespaces', gs.namespaces || '—'],['Avg Degree', gs.avg_degree?.toFixed(2) || '—']].map(([k,v]) => `
+        <div style="background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius); padding:10px 14px;">
+          <div style="font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:1px;">${k}</div>
+          <div style="font-family:var(--font-display); font-size:22px; font-weight:800; color:#fff;">${v || '—'}</div>
+        </div>`).join('')}
+    </div>
+  `;
+
+  const topPaths = (ap.top_10_critical || []).slice(0, 5);
+  document.getElementById('dc-top-paths').innerHTML = topPaths.length ? topPaths.map((p, i) => `
+    <div class="path-chain" onclick="navigate('attack-paths')" style="margin-bottom:6px;">
+      <span class="badge badge-${(p.severity||'low').toLowerCase()}">${p.severity}</span>
+      ${(p.path || []).map((n, idx) => `
+        <span class="path-node" style="font-size:10px;">${n.split('-').slice(0,2).join('-')}</span>
+        ${idx < p.path.length - 1 ? '<span class="path-arrow">→</span>' : ''}
+      `).join('')}
+      <span style="margin-left:auto; font-size:10px; color:var(--text3);">Risk: ${p.total_risk?.toFixed(1) || '?'}</span>
+    </div>
+  `).join('') : '<div class="empty-state" style="padding:20px;"><div class="empty-sub">No critical paths detected</div></div>';
+
+  document.getElementById('dc-risk-badge').innerHTML = `<span class="badge badge-${rl.toLowerCase()}">${rl}</span>`;
+  const riskColor = rl==='CRITICAL'?'var(--critical)':rl==='HIGH'?'var(--high)':rl==='MEDIUM'?'var(--medium)':'var(--low)';
+  document.getElementById('dc-risk-body').innerHTML = `
+    <div style="display:flex; gap:20px; margin-bottom:16px; flex-wrap:wrap;">
+      <div>
+        <div style="font-size:11px; color:var(--text3);">Overall Score</div>
+        <div style="font-family:var(--font-display); font-size:42px; font-weight:800; color:${riskColor};">${risk.overall_risk_score?.toFixed(1) || '—'}</div>
+      </div>
+      <div style="flex:1; min-width:200px;">
+        ${[['Attack Path Risk','attack_path_score','danger'],['CVE Risk','cve_score','warn'],['Topology Risk','topology_score','']].map(([lbl,key,cls]) => `
+          <div style="margin-bottom:8px;">
+            <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px;">
+              <span style="color:var(--text3);">${lbl}</span>
+              <span style="color:var(--text); font-family:var(--font-mono);">${risk[key]?.toFixed(1) || '—'}</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill ${cls}" style="width:${Math.min(100,(risk[key]||0)*10)}%"></div></div>
+          </div>`).join('')}
+      </div>
+    </div>
+    ${risk.recommendations ? `
+      <div style="font-size:11px; color:var(--text3); margin-bottom:8px; text-transform:uppercase; letter-spacing:1px;">Quick Recommendations</div>
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        ${(risk.recommendations || []).slice(0,3).map(r => `
+          <div style="background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius); padding:10px 12px; font-size:12px; color:var(--text2);">⚡ ${r}</div>
+        `).join('')}
+      </div>
+      ${risk.recommendations.length > 3 ? `<button class="btn btn-ghost btn-sm" style="margin-top:8px;" onclick="navigate('recommendations')">View all ${risk.recommendations.length} recommendations →</button>` : ''}
+    ` : ''}
+  `;
+}
+
+// ─── GRAPH ───
+async function loadGraphData() {
+  try {
+    const data = await api('/api/graph');
+    state.graphData = data;
+    if (state.currentPage === 'graph') renderGraph();
+  } catch (e) {
+    console.error('Graph load error:', e);
+  }
+}
+
+function renderGraph() {
+  const emptyEl = document.getElementById('cy-empty');
+  if (!state.graphData) { if(emptyEl) emptyEl.style.display = 'flex'; return; }
+  if (emptyEl) emptyEl.style.display = 'none';
+
+  const g = state.graphData.graph;
+  const nodeColor = {
+    'Pod': '#00d4ff', 'ServiceAccount': '#00ff9d',
+    'Role': '#ff8c00', 'Secret': '#ff2d55', 'ClusterRole': '#ff6b00',
+    'ClusterRoleBinding': '#cc44ff', 'RoleBinding': '#aa44ff'
+  };
+
+  const elements = [
+    ...(g.nodes || []).map(n => ({
+      data: {
+        id: n.id, label: (n.data?.name || n.id).substring(0, 18),
+        type: n.data?.type || 'Unknown', ...n.data,
+        color: nodeColor[n.data?.type] || '#7a9bb8',
+        size: n.data?.is_crown_jewel ? 50 : n.data?.is_entry_point ? 42 : 30,
+        borderColor: n.data?.is_crown_jewel ? '#ff0040' : n.data?.is_entry_point ? '#00ff9d' : 'transparent',
+      }
+    })),
+    ...(g.edges || []).map(e => ({
+      data: {
+        id: e.id || `${e.source}-${e.target}`,
+        source: e.source, target: e.target,
+        label: e.data?.binding_type || '',
+      }
+    }))
+  ];
+
+  if (cyInstance) cyInstance.destroy();
+
+  cyInstance = cytoscape({
+    container: document.getElementById('cy'),
+    elements,
+    style: [
+      { selector: 'node', style: {
+        'background-color': 'data(color)', 'label': 'data(label)',
+        'color': '#ffffff', 'font-size': '10px', 'font-family': 'JetBrains Mono, monospace',
+        'text-valign': 'bottom', 'text-halign': 'center', 'text-margin-y': '4px',
+        'width': 'data(size)', 'height': 'data(size)',
+        'border-width': 2, 'border-color': 'data(borderColor)',
+        'text-background-color': '#0c1620', 'text-background-opacity': 0.7,
+        'text-background-padding': '2px', 'text-background-shape': 'rectangle', 'overlay-opacity': 0,
+      }},
+      { selector: 'node:selected', style: { 'border-color': '#00d4ff', 'border-width': 3 }},
+      { selector: 'edge', style: {
+        'line-color': '#1a2d42', 'target-arrow-color': '#1a2d42',
+        'target-arrow-shape': 'triangle', 'curve-style': 'bezier',
+        'width': 1.5, 'opacity': 0.7, 'arrow-scale': 0.8,
+      }},
+      { selector: 'edge:selected', style: { 'line-color': '#00d4ff', 'target-arrow-color': '#00d4ff', 'opacity': 1 }},
+    ],
+    layout: { name: 'cose', animate: true, animationDuration: 800, padding: 40, nodeRepulsion: 8000, idealEdgeLength: 80 }
+  });
+
+  cyInstance.on('tap', 'node', e => openNodeDetail(e.target.data()));
+}
+
+function switchGraphLayout(name) {
+  document.querySelectorAll('#graph-tabs .tab').forEach((t,i) => t.classList.toggle('active', ['cose','breadthfirst','concentric','grid'][i]===name));
+  if (!cyInstance) return;
+  cyInstance.layout({ name, animate: true, animationDuration: 600, padding: 40, fit: true }).run();
+}
+
+function fitGraph() { if (cyInstance) cyInstance.fit(undefined, 40); }
+function resetGraph() { if (cyInstance) { cyInstance.zoom(1); cyInstance.center(); } }
+
+// ─── DOWNLOAD GRAPH ───
+function downloadGraphJSON() {
+  if (!state.graphData) { showNotif('No graph data. Run analysis first.', 'warning'); return; }
+  downloadJSON(state.graphData, 'clusternodes-graph.json');
+}
+
+function downloadGraphPNG() {
+  if (!cyInstance) { showNotif('No graph to export. Run analysis first.', 'warning'); return; }
+  const png = cyInstance.png({ scale: 2, full: true });
+  const a = document.createElement('a');
+  a.href = png; a.download = 'clusternodes-graph.png'; a.click();
+}
+
+// ─── NODE DETAIL ───
+function openNodeDetail(data) {
+  state.selectedNode = data;
+  document.getElementById('nd-name').textContent = data.name || data.id;
+  document.getElementById('nd-type').innerHTML = `<span class="badge badge-info">${data.type || 'Unknown'}</span>`;
+  const skip = ['color','size','borderColor','label'];
+  document.getElementById('nd-body').innerHTML = Object.entries(data)
+    .filter(([k]) => !skip.includes(k))
+    .map(([k,v]) => `
+      <div class="detail-row">
+        <span class="detail-key">${k}</span>
+        <span class="detail-val">${formatVal(v)}</span>
+      </div>`).join('');
+  document.getElementById('node-detail').classList.add('open');
+}
+
+function closeNodeDetail() { document.getElementById('node-detail').classList.remove('open'); }
+
+function highlightInGraph() {
+  if (!cyInstance || !state.selectedNode) return;
+  const node = cyInstance.$(`#${state.selectedNode.id}`);
+  if (node.length) { cyInstance.animate({ zoom: 2, center: { eles: node } }); }
+  navigate('graph');
+  closeNodeDetail();
+}
+
+function formatVal(v) {
+  if (v === null || v === undefined) return '<span style="color:var(--text3)">null</span>';
+  if (typeof v === 'boolean') return `<span style="color:${v?'var(--accent3)':'var(--danger)'};">${v}</span>`;
+  if (typeof v === 'object') return `<span style="color:var(--text3); font-size:10px;">${JSON.stringify(v).substring(0,60)}...</span>`;
+  return String(v);
+}
+
+function runBFSFromDetail() {
+  if (!state.selectedNode) return;
+  document.getElementById('bfs-node-input').value = state.selectedNode.id;
+  navigate('bfs'); closeNodeDetail();
+  setTimeout(runBFS, 200);
+}
+
+async function runSimulateFromDetail() {
+  if (!state.selectedNode) return;
+  document.getElementById('sim-node-input').value = state.selectedNode.id;
+  navigate('simulator'); closeNodeDetail();
+  setTimeout(runSimulation, 200);
+}
+
+// ─── BFS ───
+async function runBFS() {
+  const nodeId = document.getElementById('bfs-node-input').value.trim();
+  if (!nodeId) { showNotif('Enter a node ID first', 'warning'); return; }
+  document.getElementById('bfs-results').innerHTML = '<div class="loader"><div class="spinner"></div>Running BFS...</div>';
+  document.getElementById('bfs-raw').textContent = 'Loading...';
+  try {
+    const data = await api('/api/blast-radius/' + encodeURIComponent(nodeId));
+    const sev = data.severity || 'LOW';
+    document.getElementById('bfs-severity-badge').innerHTML = `<span class="badge badge-${sev.toLowerCase()}">${sev}</span>`;
+    document.getElementById('bfs-results').innerHTML = `
+      <div class="grid grid-2" style="gap:10px; margin-bottom:16px;">
+        <div style="background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius); padding:14px;">
+          <div style="font-size:10px; color:var(--text3); margin-bottom:4px;">TOTAL REACHABLE</div>
+          <div style="font-family:var(--font-display); font-size:28px; font-weight:800; color:#fff;">${data.total_reachable || 0}</div>
+        </div>
+        <div style="background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius); padding:14px;">
+          <div style="font-size:10px; color:var(--text3); margin-bottom:4px;">CROWN JEWELS HIT</div>
+          <div style="font-family:var(--font-display); font-size:28px; font-weight:800; color:${(data.crown_jewels_reached||[]).length > 0 ? 'var(--critical)' : 'var(--accent3)'};">${(data.crown_jewels_reached||[]).length}</div>
+        </div>
+      </div>
+      <div style="font-size:11px; color:var(--text3); margin-bottom:8px; text-transform:uppercase; letter-spacing:1px;">Hop Distribution</div>
+      ${Object.entries(data.hop_distribution || {}).map(([hop,cnt]) => `
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+          <span style="font-family:var(--font-mono); font-size:11px; color:var(--text3); width:50px;">Hop ${hop}</span>
+          <div style="flex:1; background:var(--bg3); border-radius:2px; height:16px; overflow:hidden;">
+            <div style="height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); width:${Math.min(100,cnt/(data.total_reachable||1)*100)}%; display:flex; align-items:center; padding-left:6px;">
+              <span style="font-size:10px; color:#000; font-weight:700;">${cnt}</span>
+            </div>
+          </div>
+        </div>`).join('')}
+      ${(data.crown_jewels_reached||[]).length ? `
+        <div style="margin-top:12px; padding:10px; background:rgba(255,0,64,0.08); border:1px solid rgba(255,0,64,0.3); border-radius:var(--radius);">
+          <div style="color:var(--critical); font-size:12px; font-weight:700; margin-bottom:6px;">⚠ Crown Jewels Reachable!</div>
+          ${data.crown_jewels_reached.map(cj => `<div style="font-size:11px; color:var(--text2); margin-bottom:2px;">• ${cj.name || cj.id} (hops: ${cj.hops})</div>`).join('')}
+        </div>` : ''}
+    `;
+    if ((data.reachable_nodes || []).length > 0) {
+      document.getElementById('bfs-reachable-card').style.display = '';
+      document.getElementById('bfs-count-badge').innerHTML = `<span class="badge badge-info">${data.reachable_nodes.length} nodes</span>`;
+      document.getElementById('bfs-table').innerHTML = data.reachable_nodes.map(n => `
+        <tr>
+          <td>${n.name || n.id}</td>
+          <td><span class="badge badge-info">${n.type}</span></td>
+          <td style="font-family:var(--font-mono);">${n.hops}</td>
+          <td><span style="color:${riskColor(n.risk_score)}; font-family:var(--font-mono);">${(n.risk_score||0).toFixed(1)}</span></td>
+          <td>${n.is_crown_jewel ? '<span class="badge badge-critical">YES</span>' : '<span style="color:var(--text3);">—</span>'}</td>
+        </tr>`).join('');
+    }
+    document.getElementById('bfs-raw').innerHTML = syntaxHighlight(JSON.stringify(data, null, 2));
+  } catch (e) {
+    document.getElementById('bfs-results').innerHTML = `<div style="color:var(--danger); padding:20px;">${e.message}</div>`;
+    showNotif('BFS failed: ' + e.message, 'error');
+  }
+}
+
+// ─── DFS ───
+async function runDFS() {
+  if (!state.analysisData) { showNotif('Run analysis first', 'warning'); return; }
+  document.getElementById('dfs-results').innerHTML = '<div class="loader"><div class="spinner"></div>Running DFS...</div>';
+  try {
+    const data = await api('/api/circular-permissions');
+    const cycles = Array.isArray(data) ? data : (data.cycles || data.circular_chains || []);
+    document.getElementById('dfs-count').innerHTML = `<span class="badge badge-${cycles.length > 0 ? 'critical' : 'ok'}">${cycles.length} cycles</span>`;
+    if (cycles.length === 0) {
+      document.getElementById('dfs-results').innerHTML = `<div class="empty-state" style="padding:40px;"><div style="font-size:40px;">✅</div><div style="font-family:var(--font-display); font-size:16px; color:var(--accent3);">No Circular Permissions</div><div class="empty-sub">DFS found no permission cycles</div></div>`;
+    } else {
+      document.getElementById('dfs-results').innerHTML = cycles.map((c, i) => `
+        <div style="background:var(--bg3); border:1px solid ${c.severity==='HIGH'?'rgba(255,45,85,0.3)':'var(--border)'}; border-radius:var(--radius); padding:14px; margin-bottom:10px;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+            <span class="badge badge-${(c.severity||'medium').toLowerCase()}">Cycle ${i+1}</span>
+            <span style="font-size:11px; color:var(--text3);">${c.length || (c.nodes||[]).length} nodes — Risk: ${(c.total_risk||0).toFixed(1)}</span>
+          </div>
+          <div style="display:flex; flex-wrap:wrap; align-items:center; gap:4px;">
+            ${(c.nodes || []).map((n, idx, arr) => `
+              <span class="path-node" style="font-size:10px;">${n.substring(0,20)}</span>
+              ${idx < arr.length - 1 ? '<span class="path-arrow">→</span>' : '<span class="path-arrow" style="color:var(--danger);">↻</span>'}
+            `).join('')}
+          </div>
+        </div>`).join('');
+    }
+    document.getElementById('dfs-raw').innerHTML = syntaxHighlight(JSON.stringify(data, null, 2));
+  } catch(e) {
+    document.getElementById('dfs-results').innerHTML = `<div style="color:var(--danger); padding:20px;">${e.message}</div>`;
+    showNotif('DFS failed: ' + e.message, 'error');
+  }
+}
+async function loadDFSData() { if (state.analysisData) runDFS(); }
+
+// ─── ATTACK PATHS ───
+async function loadAttackPaths() {
+  if (!state.analysisData) return;
+  try {
+    const data = await api('/api/attack-paths');
+    state.attackPaths = data;
+    const bySev = data.by_severity || {};
+    document.getElementById('ap-critical').textContent = bySev.critical_count || 0;
+    document.getElementById('ap-high').textContent = bySev.high_count || 0;
+    document.getElementById('ap-medium').textContent = bySev.medium_count || 0;
+    state.allAttackPaths = [
+      ...(data.paths?.CRITICAL || []), ...(data.paths?.HIGH || []),
+      ...(data.paths?.MEDIUM || []), ...(data.paths?.LOW || []),
+    ];
+    document.getElementById('ap-total-badge').innerHTML = `<span class="badge badge-info">${data.total_paths || 0} total</span>`;
+    renderAttackPaths(state.currentFilter);
+    document.getElementById('ap-raw').innerHTML = syntaxHighlight(JSON.stringify(data, null, 2));
+  } catch(e) {
+    document.getElementById('attack-paths-list').innerHTML = `<div style="color:var(--danger); padding:20px;">${e.message}</div>`;
+  }
+}
+
+function filterAttackPaths(sev) {
+  state.currentFilter = sev;
+  document.querySelectorAll('#attack-severity-tabs .tab').forEach(t => {
+    t.classList.toggle('active', t.textContent === (sev === 'ALL' ? 'All' : sev.charAt(0) + sev.slice(1).toLowerCase()));
+  });
+  renderAttackPaths(sev);
+}
+
+function renderAttackPaths(filter) {
+  let paths = state.allAttackPaths;
+  if (filter !== 'ALL') paths = paths.filter(p => p.severity === filter);
+  if (!paths.length) {
+    document.getElementById('attack-paths-list').innerHTML = `<div class="empty-state" style="padding:40px;"><div class="empty-icon">⚡</div><div class="empty-sub">No ${filter !== 'ALL' ? filter : ''} attack paths found</div></div>`;
+    return;
+  }
+  document.getElementById('attack-paths-list').innerHTML = paths.slice(0, 50).map((p, i) => `
+    <div class="path-chain" style="margin-bottom:8px;">
+      <span style="font-size:10px; color:var(--text3); width:28px; flex-shrink:0;">#${i+1}</span>
+      <span class="badge badge-${(p.severity||'low').toLowerCase()}">${p.severity}</span>
+      ${(p.path||[]).map((n, idx, arr) => `
+        <span class="path-node" style="font-size:10px;">${n.split('-').slice(0,3).join('-')}</span>
+        ${idx < arr.length - 1 ? '<span class="path-arrow">→</span>' : ''}
+      `).join('')}
+      <div style="margin-left:auto; text-align:right; flex-shrink:0;">
+        <div style="font-family:var(--font-mono); font-size:11px; color:${riskColor(p.total_risk)};">Risk: ${(p.total_risk||0).toFixed(1)}</div>
+        <div style="font-size:10px; color:var(--text3);">Len: ${p.length}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ─── CLUSTER NODES ───
+async function loadClusterNodes() {
+  if (!state.analysisData) return;
+  document.getElementById('cn-list').innerHTML = '<div class="loader"><div class="spinner"></div>Analyzing...</div>';
+  try {
+    const data = await api('/api/critical-nodes');
+    state.criticalNodes = data;
+    const nodes = data.critical_nodes || [];
+    if (!nodes.length) {
+      document.getElementById('cn-list').innerHTML = '<div class="empty-state" style="padding:40px;"><div class="empty-icon">◉</div><div class="empty-sub">No critical nodes found</div></div>';
+    } else {
+      document.getElementById('cn-list').innerHTML = nodes.map((n, i) => `
+        <div style="background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius); padding:14px; margin-bottom:8px; display:flex; align-items:center; gap:12px; cursor:pointer;" onclick="selectNodeFromCN('${n.node_id}')">
+          <div style="width:32px; height:32px; border-radius:50%; background:${n.criticality==='CRITICAL'?'rgba(255,0,64,0.2)':n.criticality==='HIGH'?'rgba(255,107,0,0.2)':'rgba(255,215,0,0.2)'}; display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-size:13px; font-weight:800; color:${n.criticality==='CRITICAL'?'var(--critical)':n.criticality==='HIGH'?'var(--high)':'var(--medium)'}; flex-shrink:0;">${i+1}</div>
+          <div style="flex:1;">
+            <div style="font-size:12px; color:#fff; margin-bottom:2px;">${n.name || n.node_id}</div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <span class="badge badge-info" style="font-size:9px;">${n.type}</span>
+              <span style="font-size:11px; color:var(--text3);">Breaks ${n.paths_broken} paths (${n.impact_percentage?.toFixed(1)}%)</span>
+            </div>
+          </div>
+          <div class="progress-bar" style="width:80px; margin:0;"><div class="progress-fill ${n.criticality==='CRITICAL'?'danger':n.criticality==='HIGH'?'warn':''}" style="width:${Math.min(100, n.impact_percentage || 0)}%"></div></div>
+          <span class="badge badge-${(n.criticality||'low').toLowerCase()}">${n.criticality}</span>
+        </div>`).join('');
+    }
+    document.getElementById('cn-raw').innerHTML = syntaxHighlight(JSON.stringify(data, null, 2));
+  } catch(e) {
+    document.getElementById('cn-list').innerHTML = `<div style="color:var(--danger); padding:20px;">${e.message}</div>`;
+  }
+}
+
+function selectNodeFromCN(nodeId) {
+  document.getElementById('bfs-node-input').value = nodeId;
+  navigate('bfs'); setTimeout(runBFS, 200);
+}
+
+// ─── CVE SCAN ───
+async function loadCVEScan() {
+  if (!state.analysisData) { showNotif('Run analysis first', 'warning'); return; }
+  document.getElementById('vs-list').innerHTML = '<div class="loader"><div class="spinner"></div>Scanning...</div>';
+  try {
+    const data = await api('/api/cve-scan');
+    state.cveScan = data;
+    const findings = data.findings || data.vulnerabilities || [];
+    const critical = findings.filter(f => (f.severity||'').toUpperCase() === 'CRITICAL').length;
+    const high = findings.filter(f => (f.severity||'').toUpperCase() === 'HIGH').length;
+    document.getElementById('vs-critical').textContent = critical;
+    document.getElementById('vs-high').textContent = high;
+    document.getElementById('vs-pods').textContent = data.vulnerable_pods_count || findings.length;
+    document.getElementById('vs-total').textContent = data.total_pods_scanned || '—';
+    if (!findings.length) {
+      document.getElementById('vs-list').innerHTML = `<div class="empty-state" style="padding:40px;"><div style="font-size:40px;">✅</div><div style="font-family:var(--font-display); font-size:16px; color:var(--accent3);">No Vulnerabilities Found</div><div class="empty-sub">All scanned images are clean</div></div>`;
+    } else {
+      document.getElementById('vs-list').innerHTML = findings.map(f => {
+        const score = f.cvss_score || f.score || 0;
+        const sev = (f.severity || 'LOW').toUpperCase();
+        const scoreCls = sev === 'CRITICAL' ? 'score-critical' : sev === 'HIGH' ? 'score-high' : sev === 'MEDIUM' ? 'score-medium' : 'score-low';
+        return `<div class="cve-item">
+          <div class="cve-score ${scoreCls}">${score.toFixed ? score.toFixed(1) : score}</div>
+          <div class="cve-info">
+            <div class="cve-id">${f.cve_id || f.id || 'Unknown CVE'}</div>
+            <div class="cve-desc">${f.pod_name || f.pod || ''} — ${f.image || f.description || ''}</div>
+            <div class="cve-meta">
+              <span class="badge badge-${sev.toLowerCase()}">${sev}</span>
+              ${f.image ? `<span>Image: ${f.image}</span>` : ''}
+              ${f.namespace ? `<span>NS: ${f.namespace}</span>` : ''}
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+    document.getElementById('vs-raw').innerHTML = syntaxHighlight(JSON.stringify(data, null, 2));
+  } catch(e) {
+    document.getElementById('vs-list').innerHTML = `<div style="color:var(--danger); padding:20px;">${e.message}</div>`;
+  }
+}
+
+// ─── ATTACK SIMULATOR ───
+async function runSimulation() {
+  const nodeId = document.getElementById('sim-node-input').value.trim();
+  if (!nodeId) { showNotif('Enter a node ID first', 'warning'); return; }
+  if (!state.analysisData) { showNotif('Run analysis first', 'warning'); return; }
+
+  document.getElementById('sim-results').innerHTML = '<div class="loader"><div class="spinner"></div>Simulating attack from ' + nodeId + '...</div>';
+
+  try {
+    const data = await api('/api/simulate/' + encodeURIComponent(nodeId));
+
+    // Summary row
+    const crowdCount = (data.paths_to_crown_jewels || []).length;
+    const reachable = data.total_reachable || data.reachable_count || 0;
+    const success = data.attack_success !== false;
+
+    document.getElementById('sim-results').innerHTML = `
+      <div class="grid" style="grid-template-columns:repeat(3,1fr); gap:12px;">
+        <div style="background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius); padding:14px; text-align:center;">
+          <div style="font-size:10px; color:var(--text3); margin-bottom:4px;">ENTRY POINT</div>
+          <div style="font-family:var(--font-mono); font-size:11px; color:var(--accent);">${nodeId}</div>
+        </div>
+        <div style="background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius); padding:14px; text-align:center;">
+          <div style="font-size:10px; color:var(--text3); margin-bottom:4px;">NODES REACHABLE</div>
+          <div style="font-family:var(--font-display); font-size:22px; font-weight:800; color:#fff;">${reachable}</div>
+        </div>
+        <div style="background:${crowdCount>0?'rgba(255,0,64,0.08)':'rgba(0,255,157,0.05)'}; border:1px solid ${crowdCount>0?'rgba(255,0,64,0.3)':'rgba(0,255,157,0.2)'}; border-radius:var(--radius); padding:14px; text-align:center;">
+          <div style="font-size:10px; color:var(--text3); margin-bottom:4px;">CROWN JEWEL PATHS</div>
+          <div style="font-family:var(--font-display); font-size:22px; font-weight:800; color:${crowdCount>0?'var(--critical)':'var(--accent3)'};">${crowdCount}</div>
+        </div>
+      </div>
+    `;
+
+    // Timeline
+    document.getElementById('sim-timeline-card').style.display = '';
+    document.getElementById('sim-paths-card').style.display = '';
+    document.getElementById('sim-raw-card').style.display = '';
+
+    const steps = data.attack_steps || data.simulation_steps || [];
+    const crowdBadge = crowdCount > 0
+      ? `<span class="badge badge-critical">⚠ ${crowdCount} paths to crown jewels</span>`
+      : `<span class="badge badge-ok">✓ Crown jewels not reachable</span>`;
+    document.getElementById('sim-crown-badge').innerHTML = crowdBadge;
+
+    if (steps.length > 0) {
+      document.getElementById('sim-timeline-body').innerHTML = `<div class="sim-timeline">${steps.map((s, i) => {
+        const isFirst = i === 0, isLast = i === steps.length - 1;
+        const isCrown = s.is_crown_jewel || (s.node_type === 'Secret');
+        const dotClass = isFirst ? 'entry' : isCrown ? 'crown' : i % 3 === 0 ? 'escalate' : 'pivot';
+        const icon = isFirst ? '🎯' : isCrown ? '👑' : dotClass === 'escalate' ? '⬆' : '→';
+        return `<div class="sim-event">
+          <div class="sim-dot ${dotClass}">${icon}</div>
+          <div class="sim-content">
+            <div class="sim-node">${s.node || s.name || `Step ${i+1}`}</div>
+            <div class="sim-detail">${s.action || s.description || s.type || ''}</div>
+          </div>
+          <span class="badge badge-${isCrown?'critical':isFirst?'ok':'info'}" style="flex-shrink:0;">${s.node_type || (isCrown?'Crown':'Node')}</span>
+        </div>`;
+      }).join('')}</div>`;
+    } else {
+      document.getElementById('sim-timeline-body').innerHTML = `<div class="empty-sub" style="padding:20px;">No detailed steps available. Check raw response.</div>`;
+    }
+
+    // Crown jewel paths
+    const paths = data.paths_to_crown_jewels || [];
+    document.getElementById('sim-paths-count').innerHTML = `<span class="badge badge-${paths.length>0?'critical':'ok'}">${paths.length} paths</span>`;
+    document.getElementById('sim-paths-body').innerHTML = paths.length > 0
+      ? paths.slice(0, 10).map((p, i) => `
+        <div class="path-chain" style="margin-bottom:8px;">
+          <span style="font-size:10px; color:var(--text3);">#${i+1}</span>
+          ${(Array.isArray(p) ? p : (p.path || [])).map((n, idx, arr) => `
+            <span class="path-node" style="font-size:10px;">${(typeof n === 'string' ? n : n.name || n.id || '?').substring(0,20)}</span>
+            ${idx < arr.length - 1 ? '<span class="path-arrow">→</span>' : ''}
+          `).join('')}
+          ${p.total_risk ? `<span style="margin-left:auto; font-size:10px; color:${riskColor(p.total_risk)};">Risk: ${p.total_risk.toFixed(1)}</span>` : ''}
+        </div>`).join('')
+      : '<div class="empty-sub" style="padding:20px;">No paths to crown jewels from this node</div>';
+
+    document.getElementById('sim-raw').innerHTML = syntaxHighlight(JSON.stringify(data, null, 2));
+    showNotif(`Simulation complete. ${crowdCount} paths to crown jewels.`, crowdCount > 0 ? 'error' : 'success');
+  } catch (e) {
+    document.getElementById('sim-results').innerHTML = `<div style="color:var(--danger); padding:20px;">${e.message}</div>`;
+    showNotif('Simulation failed: ' + e.message, 'error');
+  }
+}
+
+function populateEntryPoint() {
+  if (!state.graphData) { showNotif('Run analysis first to get entry points', 'warning'); return; }
+  const nodes = state.graphData.graph?.nodes || [];
+  const entry = nodes.find(n => n.data?.is_entry_point);
+  if (entry) {
+    document.getElementById('sim-node-input').value = entry.id;
+    showNotif('Auto-selected entry point: ' + entry.id, 'info');
+  } else {
+    showNotif('No entry points found in graph', 'warning');
+  }
+}
+
+// ─── RECOMMENDATIONS ───
+async function loadRecommendations() {
+  if (!state.analysisData) return;
+  const recList = document.getElementById('rec-list');
+
+  // Build recommendations from analysis data
+  const recs = buildRecommendations(state.analysisData);
+  state.recommendations = recs;
+
+  if (!recs.length) {
+    recList.innerHTML = '<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-sub">No recommendations — cluster looks healthy!</div></div>';
+    return;
+  }
+
+  recList.innerHTML = recs.map((r, i) => `
+    <div class="rec-card">
+      <div class="rec-priority ${r.priority.toLowerCase()}"></div>
+      <div class="rec-body">
+        <div class="rec-title">${r.title}</div>
+        <div class="rec-desc">${r.description}</div>
+        <div class="rec-meta">
+          <span class="badge badge-${r.priority.toLowerCase()}">${r.priority}</span>
+          <span style="font-size:11px; color:var(--text3);">${r.category}</span>
+          ${r.affected ? `<span style="font-size:11px; color:var(--text3);">Affects: ${r.affected}</span>` : ''}
+        </div>
+      </div>
+      ${r.fixable ? `
+        <button class="btn btn-ghost btn-sm" style="flex-shrink:0;" onclick="generateFixForRec('${r.fix_type}', ${JSON.stringify(r.node_data || {}).replace(/"/g,'&quot;')})">Fix →</button>
+      ` : ''}
+    </div>`).join('');
+}
+
+function buildRecommendations(analysis) {
+  const recs = [];
+  const ap = analysis.attack_paths || {};
+  const cv = analysis.cve_analysis || {};
+  const risk = analysis.risk_assessment || {};
+  const gs = analysis.graph_statistics || {};
+
+  // From risk_assessment.recommendations
+  if (risk.recommendations) {
+    risk.recommendations.forEach((r, i) => {
+      recs.push({
+        title: r,
+        description: 'Generated from risk assessment analysis of your cluster.',
+        priority: i < 2 ? 'CRITICAL' : i < 4 ? 'HIGH' : 'MEDIUM',
+        category: 'Risk Assessment',
+        fixable: false
+      });
+    });
+  }
+
+  // CVE-based recommendations
+  const critCVEs = (cv.findings || []).filter(f => (f.severity||'').toUpperCase() === 'CRITICAL');
+  if (critCVEs.length > 0) {
+    recs.push({
+      title: `Patch ${critCVEs.length} critical CVE vulnerabilities`,
+      description: `${critCVEs.length} pods running images with critical CVEs (CVSS ≥9). Immediate patching required.`,
+      priority: 'CRITICAL', category: 'CVE Management',
+      affected: critCVEs.map(c => c.pod_name || c.pod || c.image).slice(0,3).join(', '),
+      fixable: false
+    });
+  }
+
+  // Attack path recommendations
+  const critPaths = ap.by_severity?.critical_count || 0;
+  if (critPaths > 0) {
+    recs.push({
+      title: `Eliminate ${critPaths} critical attack paths`,
+      description: `${critPaths} critical attack paths found leading to crown jewels. Review RBAC bindings on entry-point pods.`,
+      priority: 'CRITICAL', category: 'Attack Surface',
+      fixable: true, fix_type: 'privilege_escalation', node_data: {}
+    });
+  }
+
+  // Circular permissions
+  const circ = analysis.circular_permissions;
+  if (circ && ((Array.isArray(circ) ? circ.length : circ.cycles?.length || 0) > 0)) {
+    recs.push({
+      title: 'Remove circular RBAC permission chains',
+      description: 'Circular permission chains allow privilege escalation loops. Remove redundant RoleBindings.',
+      priority: 'HIGH', category: 'RBAC',
+      fixable: true, fix_type: 'unrestricted_rbac', node_data: {}
+    });
+  }
+
+  // General best practices
+  if (gs.entry_points > 3) {
+    recs.push({
+      title: 'Reduce internet-facing entry points',
+      description: `${gs.entry_points} entry points detected. Limit public exposure to reduce attack surface.`,
+      priority: 'HIGH', category: 'Network', fixable: false
+    });
+  }
+
+  recs.push({
+    title: 'Implement NetworkPolicies for all namespaces',
+    description: 'Ensure all namespaces have NetworkPolicies to restrict pod-to-pod communication.',
+    priority: 'MEDIUM', category: 'Network',
+    fixable: true, fix_type: 'network_policy_missing', node_data: {}
+  });
+
+  recs.push({
+    title: 'Enable Pod Security Standards (restricted)',
+    description: 'Apply restricted Pod Security Standards to all non-system namespaces.',
+    priority: 'MEDIUM', category: 'Pod Security', fixable: false
+  });
+
+  return recs.sort((a, b) => {
+    const order = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
+    return (order[a.priority] || 3) - (order[b.priority] || 3);
+  });
+}
+
+async function refreshRecommendations() {
+  if (!state.analysisData) { showNotif('Run analysis first', 'warning'); return; }
+  loadRecommendations();
+  showNotif('Recommendations refreshed', 'success');
+}
+
+function generateFixForRec(issueType, nodeData) {
+  document.getElementById('fix-issue-type').value = issueType;
+  generateFix();
+  document.getElementById('fix-card').style.display = '';
+  document.getElementById('fix-card').scrollIntoView({ behavior: 'smooth' });
+}
+
+async function generateFix() {
+  const issueType = document.getElementById('fix-issue-type').value;
+  const nodeData = state.selectedNode || { name: 'example-pod', namespace: 'default', type: 'Pod' };
+  document.getElementById('fix-yaml').textContent = 'Generating YAML fix...';
+  try {
+    const data = await api('/api/fix', {
+      method: 'POST',
+      body: JSON.stringify({ issue_type: issueType, node_data: nodeData })
+    });
+    document.getElementById('fix-yaml').textContent = data.yaml || '# No YAML generated';
+    showNotif('Fix YAML generated for: ' + issueType, 'success');
+  } catch(e) {
+    document.getElementById('fix-yaml').textContent = `# Error generating fix: ${e.message}\n# Try running analysis first`;
+    showNotif('Fix generation failed: ' + e.message, 'error');
+  }
+}
+
+// ─── AI CHAT ───
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  appendChat('user', msg);
+  appendChat('ai', '...', true);
+  try {
+    const data = await api('/api/ai-chat', {
+      method: 'POST',
+      body: JSON.stringify({ question: msg, context: {
+        total_nodes: state.analysisData?.graph_statistics?.total_nodes || 0,
+        critical_paths: state.analysisData?.attack_paths?.by_severity?.critical_count || 0,
+        vulnerable_pods: state.analysisData?.cve_analysis?.vulnerable_pods_count || 0,
+      }})
+    });
+    replaceLastChat(data.answer || 'No response');
+  } catch(e) {
+    replaceLastChat('Error: ' + e.message);
+  }
+}
+
+function askPreset(q) {
+  document.getElementById('chat-input').value = q;
+  sendChat();
+}
+
+function appendChat(role, text, isLoading = false) {
+  const container = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = `chat-msg ${role}`;
+  if (role === 'ai') div.innerHTML = `<div class="msg-label">Gemini AI</div>${text}`;
+  else div.textContent = text;
+  if (isLoading) { div.id = 'chat-loading'; div.innerHTML = `<div class="msg-label">Gemini AI</div><div class="loader" style="padding:4px;"><div class="spinner" style="width:14px;height:14px;"></div></div>`; }
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function replaceLastChat(text) {
+  const loading = document.getElementById('chat-loading');
+  if (loading) { loading.id = ''; loading.innerHTML = `<div class="msg-label">Gemini AI</div>${text.replace(/\n/g,'<br>')}`; }
+  else appendChat('ai', text.replace(/\n/g,'<br>'));
+  document.getElementById('chat-messages').scrollTop = 999999;
+}
+
+// ─── SNAPSHOTS ───
+async function loadSnapshots() {
+  const list = document.getElementById('snap-list');
+  try {
+    const data = await api('/api/snapshots');
+    state.snapshots = data.snapshots || [];
+    if (!state.snapshots.length) {
+      list.innerHTML = '<div class="empty-state"><div class="empty-icon">📸</div><div class="empty-sub">No snapshots yet. Run analysis and create a snapshot.</div></div>';
+      return;
+    }
+    list.innerHTML = state.snapshots.map(s => `
+      <div class="snap-card" onclick="loadSnapshot('${s.id}')">
+        <div class="snap-icon">📸</div>
+        <div class="snap-info">
+          <div class="snap-id">${s.id}</div>
+          <div class="snap-time">${s.timestamp || s.created_at || 'Unknown time'}</div>
+        </div>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <span class="badge badge-${(s.risk_level||'low').toLowerCase()}">${s.risk_level || '—'}</span>
+          <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation(); fillCompare('${s.id}')">Compare</button>
+        </div>
+      </div>`).join('');
+  } catch(e) {
+    list.innerHTML = `<div style="color:var(--text3); padding:20px;">Could not load snapshots: ${e.message}</div>`;
+  }
+}
+
+async function createSnapshot() {
+  if (!state.analysisData) { showNotif('Run analysis first', 'warning'); return; }
+  try {
+    const data = await api('/api/snapshot', { method: 'POST' });
+    showNotif('Snapshot created: ' + data.snapshot_id, 'success');
+    loadSnapshots();
+  } catch(e) {
+    showNotif('Snapshot failed: ' + e.message, 'error');
+  }
+}
+
+async function loadSnapshot(id) {
+  try {
+    const data = await api('/api/snapshot/' + id);
+    showNotif('Snapshot ' + id + ' loaded', 'info');
+  } catch(e) {
+    showNotif('Failed to load snapshot: ' + e.message, 'error');
+  }
+}
+
+function fillCompare(id) {
+  const id1 = document.getElementById('snap-id1').value;
+  if (!id1) document.getElementById('snap-id1').value = id;
+  else document.getElementById('snap-id2').value = id;
+}
+
+async function compareSnapshots() {
+  const id1 = document.getElementById('snap-id1').value.trim();
+  const id2 = document.getElementById('snap-id2').value.trim();
+  if (!id1 || !id2) { showNotif('Enter both snapshot IDs', 'warning'); return; }
+  document.getElementById('snap-diff-result').innerHTML = '<div class="loader"><div class="spinner"></div>Comparing...</div>';
+  try {
+    const data = await api('/api/diff', { method: 'POST', body: JSON.stringify({ snapshot_id1: id1, snapshot_id2: id2 }) });
+    renderDiff(data);
+  } catch(e) {
+    document.getElementById('snap-diff-result').innerHTML = `<div style="color:var(--danger);">${e.message}</div>`;
+  }
+}
+
+function renderDiff(data) {
+  const el = document.getElementById('snap-diff-result');
+  el.innerHTML = `
+    <div class="grid grid-2" style="gap:12px; margin-bottom:12px;">
+      <div style="background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius); padding:12px;">
+        <div style="font-size:10px; color:var(--text3); margin-bottom:4px;">NODES ADDED</div>
+        <div style="font-family:var(--font-display); font-size:24px; color:var(--accent3);">${data.nodes_added?.length || 0}</div>
+      </div>
+      <div style="background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius); padding:12px;">
+        <div style="font-size:10px; color:var(--text3); margin-bottom:4px;">NODES REMOVED</div>
+        <div style="font-family:var(--font-display); font-size:24px; color:var(--danger);">${data.nodes_removed?.length || 0}</div>
+      </div>
+    </div>
+    <pre class="code-block">${syntaxHighlight(JSON.stringify(data, null, 2))}</pre>
+  `;
+}
+
+// ─── PDF DOWNLOAD ───
+async function downloadPDFReport() {
+  if (!state.analysisData) { showNotif('Run analysis first', 'warning'); return; }
+  showNotif('Generating PDF report...', 'info');
+  try {
+    const r = await fetch(`${state.apiBase}/api/report/pdf`);
+    if (!r.ok) throw new Error(await r.text());
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `clusternodes-security-${Date.now()}.pdf`;
+    a.click(); URL.revokeObjectURL(url);
+    showNotif('PDF report downloaded!', 'success');
+  } catch(e) {
+    showNotif('PDF generation failed: ' + e.message, 'error');
+  }
+}
+
+// ─── CSV DOWNLOADS ───
+function downloadCVEReport() {
+  if (!state.cveScan) { showNotif('Load CVE scan first', 'warning'); return; }
+  const findings = state.cveScan.findings || state.cveScan.vulnerabilities || [];
+  const rows = [['CVE ID','Severity','CVSS Score','Pod','Image','Namespace']];
+  findings.forEach(f => rows.push([f.cve_id||'',f.severity||'',f.cvss_score||'',f.pod_name||'',f.image||'',f.namespace||'']));
+  downloadCSV(rows, 'cve-report.csv');
+}
+
+function downloadAttackPathsCSV() {
+  if (!state.allAttackPaths.length) { showNotif('Load attack paths first', 'warning'); return; }
+  const rows = [['#','Severity','Risk Score','Length','Path']];
+  state.allAttackPaths.forEach((p, i) => rows.push([i+1, p.severity||'', p.total_risk?.toFixed(2)||'', p.length||'', (p.path||[]).join(' → ')]));
+  downloadCSV(rows, 'attack-paths.csv');
+}
+
+function downloadCriticalNodesCSV() {
+  if (!state.criticalNodes) { showNotif('Load critical nodes first', 'warning'); return; }
+  const nodes = state.criticalNodes.critical_nodes || [];
+  const rows = [['Rank','Name','Type','Criticality','Paths Broken','Impact %']];
+  nodes.forEach((n, i) => rows.push([i+1, n.name||n.node_id, n.type||'', n.criticality||'', n.paths_broken||0, n.impact_percentage?.toFixed(1)||'']));
+  downloadCSV(rows, 'critical-nodes.csv');
+}
+
+function downloadRecommendations() {
+  downloadJSON(state.recommendations, 'recommendations.json');
+}
+
+function downloadFix() {
+  const yaml = document.getElementById('fix-yaml').textContent;
+  const blob = new Blob([yaml], { type: 'text/yaml' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'security-fix.yaml'; a.click();
+}
+
+function downloadCSV(rows, filename) {
+  const content = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([content], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+  showNotif('Downloaded: ' + filename, 'success');
+}
+
+function downloadJSON(data, filename) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+  showNotif('Downloaded: ' + filename, 'success');
+}
+
+// ─── PLAYTHROUGH ───
+const PLAY_STEPS = [
+  { title: '🛡️ What is ClusterNode?', desc: 'ClusterNode models your Kubernetes cluster as a Directed Graph where nodes are resources (Pods, ServiceAccounts, Roles, Secrets) and edges are permission bindings.', viz: drawIntro, concept: 'Graph Theory in Security', detail: 'Kubernetes RBAC creates implicit permission paths between resources. By modeling these as a graph, we can apply classical graph algorithms to find vulnerabilities.' },
+  { title: '⊕ BFS — Blast Radius', desc: 'Breadth-First Search explores all nodes reachable from a compromised entry point, layer by layer, calculating the "blast radius".', viz: drawBFS, concept: 'Breadth-First Search (BFS)', detail: 'Starting from a compromised pod, BFS visits all neighbors at hop 1, then hop 2, etc. Crown Jewels in the blast radius = critical risk.' },
+  { title: '⊗ DFS — Circular Permissions', desc: 'Depth-First Search finds cycles in the permission graph. A circular chain (A → B → C → A) can allow privilege escalation attacks.', viz: drawDFS, concept: 'DFS + Cycle Detection', detail: 'DFS with back-edge detection finds strongly connected components representing circular RBAC bindings.' },
+  { title: '⚡ Attack Paths — Dijkstra', desc: "Dijkstra's algorithm finds the shortest (least-effort) attack path from entry points to crown jewels, weighted by node risk scores.", viz: drawDijkstra, concept: 'Shortest Path Algorithm', detail: 'Edge weights are the inverse of risk. The algorithm finds the most likely exploitation route an attacker would take.' },
+  { title: '◉ Critical Nodes — What-If', desc: 'A what-if simulation removes each node and measures how many attack paths are broken. The nodes breaking the most paths are most critical.', viz: drawCritical, concept: 'Graph Centrality & Bottleneck Analysis', detail: 'Betweenness centrality identifies bridge nodes. Securing these "chokepoints" has the highest security ROI.' },
+  { title: '⚡ Attack Simulator', desc: 'Simulate a full kill-chain attack from any entry point node. See exactly how an attacker would move through your cluster.', viz: drawSimulator, concept: 'Kill Chain Simulation', detail: 'The simulator traces all paths from an entry point to crown jewels, producing a step-by-step timeline of the attack.' },
+  { title: '🚀 Run Your Analysis', desc: 'Now you understand the algorithms. Click "Run Analysis" to analyze your cluster and explore all the features interactively.', viz: drawFinale, concept: 'Full Analysis Pipeline', detail: 'The pipeline runs: (1) Cluster ingestion, (2) Graph construction, (3) BFS, (4) DFS, (5) Dijkstra, (6) CVE scoring, (7) Risk aggregation.' }
+];
+
+let playAnimFrame = null;
+
+function initPlaythrough() { renderPlaySteps(); }
+
+function renderPlaySteps() {
+  document.getElementById('play-steps-list').innerHTML = PLAY_STEPS.map((s, i) => `
+    <div class="edu-step ${i === 0 ? 'active' : ''}" id="step-card-${i}">
+      <div class="step-num">Step ${i+1}</div>
+      <div class="step-title">${s.title}</div>
+      <div class="step-desc">${s.desc}</div>
+      <div style="background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius); padding:10px 14px;">
+        <div style="font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">💡 Concept</div>
+        <div style="font-size:12px; color:var(--accent); font-weight:700; margin-bottom:4px;">${s.concept}</div>
+        <div style="font-size:11px; color:var(--text2); line-height:1.6;">${s.detail}</div>
+      </div>
+    </div>`).join('');
+}
+
+function togglePlay() {
+  state.playPlaying = !state.playPlaying;
+  document.getElementById('play-btn').textContent = state.playPlaying ? '⏸' : '▶';
+  if (state.playPlaying) { state.playInterval = setInterval(nextStep, 4000); nextStep(); }
+  else clearInterval(state.playInterval);
+}
+
+function nextStep() {
+  if (state.playStep < PLAY_STEPS.length) {
+    showStep(state.playStep); state.playStep++;
+    if (state.playStep >= PLAY_STEPS.length) {
+      clearInterval(state.playInterval); state.playPlaying = false;
+      document.getElementById('play-btn').textContent = '▶';
+    }
+  }
+}
+
+function resetPlay() {
+  clearInterval(state.playInterval); state.playPlaying = false; state.playStep = 0;
+  document.getElementById('play-btn').textContent = '▶';
+  document.getElementById('play-desc').style.display = 'flex';
+  document.getElementById('play-progress').style.width = '0%';
+  document.getElementById('play-step-counter').textContent = 'Step 0 of 7';
+  document.getElementById('play-step-title').textContent = 'Ready to Start';
+  document.querySelectorAll('.edu-step').forEach((el, i) => el.className = 'edu-step ' + (i === 0 ? 'active' : ''));
+  const canvas = document.getElementById('play-canvas');
+  canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+  if (playAnimFrame) cancelAnimationFrame(playAnimFrame);
+}
+
+function showStep(idx) {
+  if (idx >= PLAY_STEPS.length) return;
+  const step = PLAY_STEPS[idx];
+  document.getElementById('play-step-title').textContent = step.title;
+  document.getElementById('play-step-counter').textContent = `Step ${idx+1} of ${PLAY_STEPS.length}`;
+  document.getElementById('play-progress').style.width = `${((idx+1)/PLAY_STEPS.length)*100}%`;
+  document.querySelectorAll('.edu-step').forEach((el, i) => {
+    el.className = 'edu-step' + (i < idx ? ' completed' : i === idx ? ' active' : '');
+  });
+  const canvas = document.getElementById('play-canvas');
+  const container = document.getElementById('play-viz') || canvas.parentElement;
+  canvas.width = container.offsetWidth;
+  canvas.height = container.offsetHeight;
+  document.getElementById('play-desc').style.display = 'none';
+  if (playAnimFrame) cancelAnimationFrame(playAnimFrame);
+  step.viz(canvas);
+}
+
+// Canvas drawing functions
+function drawIntro(canvas) {
+  const ctx = canvas.getContext('2d'); const w = canvas.width, h = canvas.height; let t = 0;
+  const nodes = [
+    { x: w/2, y: h/2, r: 30, label: 'Pod', color: '#00d4ff', isEntry: true },
+    { x: w/2-160, y: h/2-80, r: 24, label: 'SA', color: '#00ff9d' },
+    { x: w/2+160, y: h/2-80, r: 24, label: 'Role', color: '#ff8c00' },
+    { x: w/2-160, y: h/2+80, r: 24, label: 'Pod', color: '#00d4ff' },
+    { x: w/2+160, y: h/2+80, r: 24, label: 'Secret', color: '#ff2d55', isCrown: true },
+    { x: w/2, y: h/2-160, r: 20, label: 'SA', color: '#00ff9d' },
+    { x: w/2, y: h/2+160, r: 20, label: 'Role', color: '#ff8c00' },
+  ];
+  const edges = [[0,1],[0,2],[1,3],[2,4],[0,5],[3,6],[6,4]];
+  function frame() {
+    ctx.clearRect(0, 0, w, h); ctx.fillStyle = '#080f17'; ctx.fillRect(0, 0, w, h);
+    edges.forEach(([a, b]) => {
+      ctx.beginPath(); ctx.moveTo(nodes[a].x, nodes[a].y); ctx.lineTo(nodes[b].x, nodes[b].y);
+      ctx.strokeStyle = 'rgba(26,45,66,0.8)'; ctx.lineWidth = 1.5; ctx.stroke();
+      const progress = ((t * 0.01) % 1);
+      const px = nodes[a].x + (nodes[b].x - nodes[a].x) * progress;
+      const py = nodes[a].y + (nodes[b].y - nodes[a].y) * progress;
+      ctx.beginPath(); ctx.arc(px, py, 3, 0, Math.PI * 2); ctx.fillStyle = '#00d4ff'; ctx.fill();
+    });
+    nodes.forEach(n => {
+      const glow = n.isCrown ? '#ff0040' : n.isEntry ? '#00ff9d' : n.color;
+      ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+      ctx.fillStyle = n.color + '33'; ctx.fill(); ctx.strokeStyle = n.color; ctx.lineWidth = 2; ctx.stroke();
+      if (n.isEntry || n.isCrown) {
+        ctx.beginPath(); ctx.arc(n.x, n.y, n.r + 8 + Math.sin(t * 0.05) * 4, 0, Math.PI * 2);
+        ctx.strokeStyle = glow + '44'; ctx.lineWidth = 1; ctx.stroke();
+      }
+      ctx.fillStyle = '#fff'; ctx.font = '10px JetBrains Mono, monospace';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(n.label, n.x, n.y);
+    });
+    ctx.fillStyle = 'rgba(0,212,255,0.6)'; ctx.font = 'bold 12px Syne, sans-serif';
+    ctx.textAlign = 'center'; ctx.fillText('Kubernetes Permission Graph (DAG)', w/2, 24);
+    t++; playAnimFrame = requestAnimationFrame(frame);
+  }
+  playAnimFrame = requestAnimationFrame(frame);
+}
+
+function drawBFS(canvas) {
+  const ctx = canvas.getContext('2d'); const w = canvas.width, h = canvas.height; let t = 0;
+  const nodes = [
+    { x: 80, y: h/2, r: 28, label: 'entry-pod', color: '#00ff9d', hop: 0 },
+    { x: 220, y: h/2-80, r: 22, label: 'SA-1', color: '#00d4ff', hop: 1 },
+    { x: 220, y: h/2+80, r: 22, label: 'SA-2', color: '#00d4ff', hop: 1 },
+    { x: 360, y: h/2-120, r: 22, label: 'Role-A', color: '#ff8c00', hop: 2 },
+    { x: 360, y: h/2, r: 22, label: 'Role-B', color: '#ff8c00', hop: 2 },
+    { x: 360, y: h/2+120, r: 22, label: 'Role-C', color: '#ff8c00', hop: 2 },
+    { x: 500, y: h/2-80, r: 22, label: 'Secret', color: '#ff2d55', hop: 3 },
+    { x: 500, y: h/2+80, r: 22, label: '👑 Crown', color: '#ff0040', hop: 3 },
+  ];
+  const edges = [[0,1],[0,2],[1,3],[1,4],[2,4],[2,5],[3,6],[4,7],[5,6]];
+  function frame() {
+    ctx.clearRect(0, 0, w, h); ctx.fillStyle = '#080f17'; ctx.fillRect(0, 0, w, h);
+    const maxHop = Math.floor((t * 0.02) % 5);
+    edges.forEach(([a, b]) => {
+      const active = nodes[a].hop <= maxHop;
+      ctx.beginPath(); ctx.moveTo(nodes[a].x, nodes[a].y); ctx.lineTo(nodes[b].x, nodes[b].y);
+      ctx.strokeStyle = active ? '#00d4ff44' : '#1a2d4244'; ctx.lineWidth = active ? 2 : 1; ctx.stroke();
+    });
+    nodes.forEach(n => {
+      ctx.globalAlpha = n.hop <= maxHop ? 1 : 0.2;
+      ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+      ctx.fillStyle = n.color + '33'; ctx.fill(); ctx.strokeStyle = n.color; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.font = '9px JetBrains Mono'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(n.label, n.x, n.y); ctx.globalAlpha = 1;
+    });
+    ctx.fillStyle = '#00d4ffaa'; ctx.font = 'bold 12px Syne'; ctx.textAlign = 'center';
+    ctx.fillText('BFS: Layer-by-Layer Blast Radius Expansion', w/2, canvas.height - 16);
+    t++; playAnimFrame = requestAnimationFrame(frame);
+  }
+  playAnimFrame = requestAnimationFrame(frame);
+}
+
+function drawDFS(canvas) {
+  const ctx = canvas.getContext('2d'); const w = canvas.width, h = canvas.height; let t = 0;
+  const cx = w/2, cy = h/2;
+  const nodes = [
+    { x: cx, y: cy-120, label: 'Pod-A', color: '#00d4ff' },
+    { x: cx+100, y: cy, label: 'SA-1', color: '#00ff9d' },
+    { x: cx, y: cy+120, label: 'Role-X', color: '#ff8c00' },
+    { x: cx-100, y: cy, label: 'ClusterRole', color: '#ff6b00' },
+    { x: cx-160, y: cy-80, label: 'Pod-B', color: '#00d4ff' },
+  ];
+  const edges = [[0,1],[1,2],[2,3],[3,0],[0,4],[4,3]];
+  function frame() {
+    ctx.clearRect(0, 0, w, h); ctx.fillStyle = '#080f17'; ctx.fillRect(0, 0, w, h);
+    const cycleProgress = (t * 0.015) % 1; const cycleNode = Math.floor(cycleProgress * 4);
+    const cycleEdges = [0,1,2,3];
+    edges.forEach(([a, b], i) => {
+      ctx.beginPath(); ctx.moveTo(nodes[a].x, nodes[a].y); ctx.lineTo(nodes[b].x, nodes[b].y);
+      ctx.strokeStyle = cycleEdges.includes(i) ? '#ff004488' : '#1a2d42'; ctx.lineWidth = cycleEdges.includes(i) ? 2 : 1; ctx.stroke();
+    });
+    const curNode = nodes[cycleNode % nodes.length];
+    ctx.beginPath(); ctx.arc(curNode.x, curNode.y, 35 + Math.sin(t * 0.1) * 5, 0, Math.PI * 2);
+    ctx.strokeStyle = '#ff0040'; ctx.lineWidth = 1; ctx.setLineDash([4, 4]); ctx.stroke(); ctx.setLineDash([]);
+    nodes.forEach((n, i) => {
+      ctx.beginPath(); ctx.arc(n.x, n.y, 26, 0, Math.PI * 2);
+      ctx.fillStyle = n.color + '33'; ctx.fill();
+      ctx.strokeStyle = i === cycleNode % nodes.length ? '#ff0040' : n.color;
+      ctx.lineWidth = i === cycleNode % nodes.length ? 3 : 2; ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.font = '10px JetBrains Mono'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(n.label, n.x, n.y);
+    });
+    ctx.fillStyle = '#ff004488'; ctx.font = 'bold 12px Syne'; ctx.textAlign = 'center';
+    ctx.fillText('⊗ Cycle Detected! Privilege Escalation Risk', w/2, h - 16);
+    t++; playAnimFrame = requestAnimationFrame(frame);
+  }
+  playAnimFrame = requestAnimationFrame(frame);
+}
+
+function drawDijkstra(canvas) {
+  const ctx = canvas.getContext('2d'); const w = canvas.width, h = canvas.height; let t = 0;
+  const nodes = [
+    { x: 60, y: h/2, label: 'Internet', color: '#00ff9d', risk: 0 },
+    { x: 200, y: h/2-70, label: 'nginx pod\nCVSS 8.1', color: '#ff8c00', risk: 8.1 },
+    { x: 200, y: h/2+70, label: 'safe pod\nCVSS 2.1', color: '#00d4ff', risk: 2.1 },
+    { x: 360, y: h/2-70, label: 'SA (admin)', color: '#ff6b00', risk: 7 },
+    { x: 360, y: h/2+70, label: 'SA (viewer)', color: '#00ff9d', risk: 1 },
+    { x: 520, y: h/2, label: '👑 etcd\nsecret', color: '#ff0040', risk: 10 },
+  ];
+  const shortestPath = [0, 1, 3, 5];
+  const allEdges = [[0,1],[0,2],[1,3],[2,4],[3,5],[4,5]];
+  function frame() {
+    ctx.clearRect(0, 0, w, h); ctx.fillStyle = '#080f17'; ctx.fillRect(0, 0, w, h);
+    const pathProgress = (t * 0.008) % 1;
+    allEdges.forEach(([a, b]) => {
+      const isOnPath = shortestPath.includes(a) && shortestPath.includes(b) && Math.abs(shortestPath.indexOf(a) - shortestPath.indexOf(b)) === 1;
+      ctx.beginPath(); ctx.moveTo(nodes[a].x, nodes[a].y); ctx.lineTo(nodes[b].x, nodes[b].y);
+      ctx.strokeStyle = isOnPath ? '#ff8c0066' : '#1a2d42'; ctx.lineWidth = isOnPath ? 3 : 1; ctx.stroke();
+      const mx = (nodes[a].x + nodes[b].x) / 2, my = (nodes[a].y + nodes[b].y) / 2;
+      ctx.fillStyle = isOnPath ? '#ff8c00' : '#4a6480'; ctx.font = '9px JetBrains Mono'; ctx.textAlign = 'center';
+      ctx.fillText(`w:${((nodes[a].risk + nodes[b].risk)/2).toFixed(1)}`, mx, my - 8);
+    });
+    if (shortestPath.length > 1) {
+      const i = Math.floor(pathProgress * (shortestPath.length - 1));
+      const frac = (pathProgress * (shortestPath.length - 1)) % 1;
+      const a = nodes[shortestPath[i]], b2 = nodes[shortestPath[Math.min(i+1, shortestPath.length-1)]];
+      const px = a.x + (b2.x - a.x) * frac, py = a.y + (b2.y - a.y) * frac;
+      ctx.beginPath(); ctx.arc(px, py, 8, 0, Math.PI * 2); ctx.fillStyle = '#ff8c00'; ctx.fill();
+    }
+    nodes.forEach(n => {
+      ctx.beginPath(); ctx.arc(n.x, n.y, 28, 0, Math.PI * 2);
+      ctx.fillStyle = n.color + '33'; ctx.fill(); ctx.strokeStyle = n.color; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.font = '9px JetBrains Mono'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      n.label.split('\n').forEach((l, li, arr) => ctx.fillText(l, n.x, n.y + (li - (arr.length-1)/2) * 12));
+    });
+    ctx.fillStyle = '#ff8c00aa'; ctx.font = 'bold 12px Syne'; ctx.textAlign = 'center';
+    ctx.fillText('⚡ Dijkstra finds highest-risk attack path', w/2, h-16);
+    t++; playAnimFrame = requestAnimationFrame(frame);
+  }
+  playAnimFrame = requestAnimationFrame(frame);
+}
+
+function drawCritical(canvas) {
+  const ctx = canvas.getContext('2d'); const w = canvas.width, h = canvas.height; let t = 0;
+  function frame() {
+    ctx.clearRect(0, 0, w, h); ctx.fillStyle = '#080f17'; ctx.fillRect(0, 0, w, h);
+    const remove = Math.floor(t * 0.01) % 2 === 0;
+    const cx = w/2, cy = h/2;
+    const nodes = [
+      { x: cx-200, y: cy-80, label: 'Entry-1', color: '#00ff9d' },
+      { x: cx-200, y: cy+80, label: 'Entry-2', color: '#00ff9d' },
+      { x: cx, y: cy, label: '⭐ Chokepoint', color: remove ? '#4a6480' : '#ffd700', critical: true },
+      { x: cx+200, y: cy-80, label: '👑 DB', color: '#ff0040' },
+      { x: cx+200, y: cy+80, label: '👑 Secrets', color: '#ff0040' },
+    ];
+    const edges = [[0,2],[1,2],[2,3],[2,4]];
+    edges.forEach(([a, b]) => {
+      const broken = remove && (a === 2 || b === 2);
+      ctx.beginPath(); ctx.moveTo(nodes[a].x, nodes[a].y); ctx.lineTo(nodes[b].x, nodes[b].y);
+      ctx.strokeStyle = broken ? '#1a2d42' : '#00d4ff44'; ctx.lineWidth = broken ? 1 : 2;
+      ctx.setLineDash(broken ? [4, 4] : []); ctx.stroke(); ctx.setLineDash([]);
+    });
+    nodes.forEach(n => {
+      ctx.globalAlpha = remove && n.critical ? 0.2 : 1;
+      ctx.beginPath(); ctx.arc(n.x, n.y, n.critical ? 36 : 26, 0, Math.PI * 2);
+      ctx.fillStyle = n.color + '33'; ctx.fill(); ctx.strokeStyle = n.color; ctx.lineWidth = n.critical ? 3 : 2; ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.font = '10px JetBrains Mono'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(n.label, n.x, n.y);
+      ctx.globalAlpha = 1;
+    });
+    ctx.fillStyle = '#ffd700aa'; ctx.font = 'bold 12px Syne'; ctx.textAlign = 'center';
+    ctx.fillText(remove ? '◉ Removing chokepoint breaks ALL paths' : '◉ Chokepoint controls all attack paths', w/2, h-16);
+    t++; playAnimFrame = requestAnimationFrame(frame);
+  }
+  playAnimFrame = requestAnimationFrame(frame);
+}
+
+function drawSimulator(canvas) {
+  const ctx = canvas.getContext('2d'); const w = canvas.width, h = canvas.height; let t = 0;
+  const steps = [
+    { x: 50, y: h/2, label: '🎯 Entry Pod', color: '#00ff9d' },
+    { x: 160, y: h/2 - 60, label: 'ServiceAccount', color: '#00d4ff' },
+    { x: 280, y: h/2 + 40, label: 'ClusterRole', color: '#ff8c00' },
+    { x: 400, y: h/2 - 40, label: 'Role Admin', color: '#ff6b00' },
+    { x: 520, y: h/2, label: '👑 etcd', color: '#ff0040' },
+  ];
+  function frame() {
+    ctx.clearRect(0, 0, w, h); ctx.fillStyle = '#080f17'; ctx.fillRect(0, 0, w, h);
+    const activeStep = Math.floor((t * 0.015) % (steps.length + 1));
+    for (let i = 0; i < steps.length - 1; i++) {
+      ctx.beginPath(); ctx.moveTo(steps[i].x, steps[i].y); ctx.lineTo(steps[i+1].x, steps[i+1].y);
+      ctx.strokeStyle = i < activeStep ? steps[i].color + '88' : '#1a2d42'; ctx.lineWidth = i < activeStep ? 2 : 1; ctx.stroke();
+    }
+    if (activeStep < steps.length && activeStep > 0) {
+      const from = steps[activeStep-1], to = steps[activeStep];
+      const frac = ((t * 0.015) % 1);
+      const px = from.x + (to.x - from.x) * frac, py = from.y + (to.y - from.y) * frac;
+      ctx.beginPath(); ctx.arc(px, py, 6, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill();
+      ctx.beginPath(); ctx.arc(px, py, 10, 0, Math.PI * 2); ctx.strokeStyle = '#ffffff44'; ctx.lineWidth = 1; ctx.stroke();
+    }
+    steps.forEach((s, i) => {
+      ctx.globalAlpha = i <= activeStep ? 1 : 0.3;
+      ctx.beginPath(); ctx.arc(s.x, s.y, 26, 0, Math.PI * 2);
+      ctx.fillStyle = s.color + '22'; ctx.fill(); ctx.strokeStyle = s.color;
+      ctx.lineWidth = i <= activeStep ? 2.5 : 1; ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.font = '9px JetBrains Mono'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(s.label, s.x, s.y);
+      if (i <= activeStep) {
+        ctx.fillStyle = '#00ff9d88'; ctx.font = '8px JetBrains Mono'; ctx.textAlign = 'center';
+        ctx.fillText(`Step ${i+1}`, s.x, s.y + 38);
+      }
+      ctx.globalAlpha = 1;
+    });
+    ctx.fillStyle = '#cc44ffaa'; ctx.font = 'bold 12px Syne'; ctx.textAlign = 'center';
+    ctx.fillText('⚡ Attack Simulator: Kill Chain Visualization', w/2, h-16);
+    t++; playAnimFrame = requestAnimationFrame(frame);
+  }
+  playAnimFrame = requestAnimationFrame(frame);
+}
+
+function drawFinale(canvas) {
+  const ctx = canvas.getContext('2d'); const w = canvas.width, h = canvas.height; let t = 0;
+  function frame() {
+    ctx.clearRect(0, 0, w, h); ctx.fillStyle = '#080f17'; ctx.fillRect(0, 0, w, h);
+    for (let i = 0; i < 12; i++) {
+      const x = 60 + (i % 4) * (w/4), y = 80 + Math.floor(i / 4) * (h/3);
+      const r = 20 + Math.sin(t*0.05 + i) * 5;
+      const colors = ['#00d4ff', '#00ff9d', '#ff8c00', '#ff2d55'];
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.strokeStyle = colors[i % 4] + '55'; ctx.lineWidth = 1.5; ctx.stroke();
+    }
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 26px Syne'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.shadowColor = '#00d4ff'; ctx.shadowBlur = 20; ctx.fillText('🚀 Ready to Analyze', w/2, h/2 - 20); ctx.shadowBlur = 0;
+    ctx.fillStyle = '#7a9bb8'; ctx.font = '12px Space Mono'; ctx.fillText('Click "Run Analysis" to begin', w/2, h/2 + 24);
+    t++; playAnimFrame = requestAnimationFrame(frame);
+  }
+  playAnimFrame = requestAnimationFrame(frame);
+}
+
+// ─── UTILS ───
+function riskColor(score) {
+  if (!score) return 'var(--text3)';
+  if (score >= 9) return 'var(--critical)';
+  if (score >= 7) return 'var(--high)';
+  if (score >= 4) return 'var(--medium)';
+  return 'var(--low)';
+}
+
+function syntaxHighlight(json) {
+  return json.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/(\"(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*\"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, match => {
+      let cls = 'json-number';
+      if (/^"/.test(match)) cls = /:$/.test(match) ? 'json-key' : 'json-string';
+      else if (/true|false/.test(match)) cls = 'json-bool';
+      else if (/null/.test(match)) cls = 'json-null';
+      return `<span class="${cls}">${match}</span>`;
+    });
+}
+
+function copyCode(id) {
+  const el = document.getElementById(id);
+  navigator.clipboard.writeText(el.textContent).then(() => showNotif('Copied to clipboard', 'success'));
+}
+
+function showNotif(msg, type = 'info') {
+  const container = document.getElementById('notification');
+  const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+  const div = document.createElement('div');
+  div.className = `notif ${type}`;
+  div.innerHTML = `<span>${icons[type]||'ℹ️'}</span><span style="flex:1;font-size:12px;">${msg}</span>`;
+  container.appendChild(div);
+  setTimeout(() => div.remove(), 5000);
+}
+</script>
+</body>
+</html>
