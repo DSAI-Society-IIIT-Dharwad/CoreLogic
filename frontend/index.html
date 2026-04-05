@@ -2882,6 +2882,510 @@ function showNotif(msg, type = 'info') {
   container.appendChild(div);
   setTimeout(() => div.remove(), 5000);
 }
+
+// ═══════════════════════════════════════════════════════════════
+//  HACKER-STYLE ALERT AUDIO SYSTEM
+//  Triggers when: Crown Jewel path reached / BFS hit / DFS cycle 
+//  detected / CVSS score exceeds 0.2
+// ═══════════════════════════════════════════════════════════════
+const AlertAudio = (() => {
+  let ctx = null;
+  let lastAlertTime = 0;
+  const COOLDOWN_MS = 4000; // prevent rapid re-fires
+
+  function getCtx() {
+    if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  }
+
+  // 3-second hacker pulse: low throb → rising glitch tones → static burst → decay
+  function playHackerPulse() {
+    const now = Date.now();
+    if (now - lastAlertTime < COOLDOWN_MS) return;
+    lastAlertTime = now;
+
+    const ac = getCtx();
+    const t = ac.currentTime;
+
+    // — Master gain with 3 s envelope —
+    const master = ac.createGain();
+    master.gain.setValueAtTime(0, t);
+    master.gain.linearRampToValueAtTime(0.55, t + 0.05);
+    master.gain.setValueAtTime(0.55, t + 2.7);
+    master.gain.linearRampToValueAtTime(0, t + 3.0);
+    master.connect(ac.destination);
+
+    // — Distortion waveshaper for grit —
+    const waveshaper = ac.createWaveShaper();
+    const n = 256, curve = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      const x = (i * 2) / n - 1;
+      curve[i] = (Math.PI + 200) * x / (Math.PI + 200 * Math.abs(x));
+    }
+    waveshaper.curve = curve;
+    waveshaper.connect(master);
+
+    // — Layer 1: sub-bass heartbeat pulse (2 pulses) —
+    [0, 0.55].forEach(offset => {
+      const sub = ac.createOscillator();
+      const subG = ac.createGain();
+      sub.type = 'sine';
+      sub.frequency.setValueAtTime(55, t + offset);
+      sub.frequency.exponentialRampToValueAtTime(30, t + offset + 0.4);
+      subG.gain.setValueAtTime(0.8, t + offset);
+      subG.gain.exponentialRampToValueAtTime(0.001, t + offset + 0.45);
+      sub.connect(subG); subG.connect(master);
+      sub.start(t + offset); sub.stop(t + offset + 0.5);
+    });
+
+    // — Layer 2: glitch saw-wave arpeggios (5 quick tones) —
+    const glitchFreqs = [220, 440, 330, 880, 165];
+    const glitchTimes = [0.6, 0.85, 1.1, 1.35, 1.6];
+    glitchFreqs.forEach((freq, i) => {
+      const osc = ac.createOscillator();
+      const g = ac.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, t + glitchTimes[i]);
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.8, t + glitchTimes[i] + 0.18);
+      g.gain.setValueAtTime(0.18, t + glitchTimes[i]);
+      g.gain.exponentialRampToValueAtTime(0.001, t + glitchTimes[i] + 0.22);
+      osc.connect(g); g.connect(waveshaper);
+      osc.start(t + glitchTimes[i]); osc.stop(t + glitchTimes[i] + 0.25);
+    });
+
+    // — Layer 3: static noise burst (filtered white noise) —
+    const bufSize = ac.sampleRate * 0.8;
+    const noiseBuffer = ac.createBuffer(1, bufSize, ac.sampleRate);
+    const data = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+    const noise = ac.createBufferSource();
+    noise.buffer = noiseBuffer;
+    const bpf = ac.createBiquadFilter();
+    bpf.type = 'bandpass';
+    bpf.frequency.setValueAtTime(1200, t + 1.9);
+    bpf.frequency.exponentialRampToValueAtTime(400, t + 2.6);
+    bpf.Q.value = 1.5;
+    const noiseG = ac.createGain();
+    noiseG.gain.setValueAtTime(0.0, t + 1.9);
+    noiseG.gain.linearRampToValueAtTime(0.35, t + 2.0);
+    noiseG.gain.linearRampToValueAtTime(0.0, t + 2.7);
+    noise.connect(bpf); bpf.connect(noiseG); noiseG.connect(master);
+    noise.start(t + 1.9); noise.stop(t + 2.8);
+
+    // — Layer 4: final warning tone descend —
+    const warn = ac.createOscillator();
+    const warnG = ac.createGain();
+    warn.type = 'square';
+    warn.frequency.setValueAtTime(660, t + 2.05);
+    warn.frequency.exponentialRampToValueAtTime(110, t + 2.9);
+    warnG.gain.setValueAtTime(0.12, t + 2.05);
+    warnG.gain.exponentialRampToValueAtTime(0.001, t + 2.95);
+    warn.connect(warnG); warnG.connect(waveshaper);
+    warn.start(t + 2.05); warn.stop(t + 3.0);
+  }
+
+  return { play: playHackerPulse };
+})();
+
+// ─── ALERT BANNER ───
+function showAlertBanner(reason) {
+  AlertAudio.play();
+  const existing = document.getElementById('alert-banner');
+  if (existing) existing.remove();
+
+  const banner = document.createElement('div');
+  banner.id = 'alert-banner';
+  banner.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span style="font-size:18px;animation:alert-pulse 0.4s infinite alternate;">🚨</span>
+      <div>
+        <div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:#ff0040;letter-spacing:1px;">SECURITY ALERT TRIGGERED</div>
+        <div style="font-size:11px;color:#ffaabb;margin-top:2px;">${reason}</div>
+      </div>
+      <button onclick="this.parentElement.parentElement.remove()" style="margin-left:auto;background:transparent;border:none;color:#ff4466;cursor:pointer;font-size:16px;padding:0 4px;">✕</button>
+    </div>
+  `;
+  Object.assign(banner.style, {
+    position: 'fixed', top: '64px', left: '50%', transform: 'translateX(-50%)',
+    zIndex: '99999', background: 'rgba(10,0,8,0.97)',
+    border: '1.5px solid #ff0040', borderRadius: '10px',
+    padding: '14px 20px', minWidth: '440px', maxWidth: '680px',
+    boxShadow: '0 0 40px rgba(255,0,64,0.5), 0 0 80px rgba(255,0,64,0.15)',
+    backdropFilter: 'blur(12px)', animation: 'alert-slide-in 0.3s ease'
+  });
+  document.body.appendChild(banner);
+  setTimeout(() => { if (banner.parentElement) banner.remove(); }, 8000);
+}
+
+// inject keyframes
+const alertStyle = document.createElement('style');
+alertStyle.textContent = `
+  @keyframes alert-pulse { from { opacity:1; transform:scale(1); } to { opacity:0.5; transform:scale(1.2); } }
+  @keyframes alert-slide-in { from { opacity:0; transform:translateX(-50%) translateY(-12px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
+`;
+document.head.appendChild(alertStyle);
+
+// ─── CHECK ALERT CONDITIONS ───
+function checkAndTriggerAlert(context, data) {
+  // Crown Jewel hit via BFS
+  if (context === 'bfs') {
+    const crownHit = (data.crown_jewels_reached || []).length > 0;
+    if (crownHit) {
+      showAlertBanner(`BFS Crown Jewel breach — ${data.crown_jewels_reached.length} crown jewel(s) reachable from source node`);
+      return;
+    }
+  }
+  // DFS cycle detected
+  if (context === 'dfs') {
+    const cycles = (data.cycles || data.circular_permissions || []).length;
+    if (cycles > 0) {
+      showAlertBanner(`DFS Circular Permission detected — ${cycles} cycle(s) in permission graph`);
+      return;
+    }
+  }
+  // Attack path reaching crown jewel / CVSS threshold
+  if (context === 'attack-path') {
+    const { path, cvss } = data;
+    const crownJewels = ['production-db','analytics-db','worker-node-1','kube-system','data-pvc','admin-token','db-credentials'];
+    const hitsCrown = (path || []).some(n => crownJewels.some(cj => n.includes(cj)));
+    if (hitsCrown) {
+      showAlertBanner(`Attack path reaches Crown Jewel — ${path[path.length-1]}`);
+      return;
+    }
+    if ((cvss || 0) > 0.2) {
+      showAlertBanner(`High CVSS score detected on attack path — CVSS ${cvss}`);
+    }
+  }
+  // CVE scan: any CVSS > 0.2
+  if (context === 'cve') {
+    const highCVEs = (data || []).filter(f => (f.cvss_score || f.score || 0) > 0.2);
+    if (highCVEs.length > 0) {
+      showAlertBanner(`CVE Alert — ${highCVEs.length} vulnerability/vulnerabilities with CVSS > 0.2 detected`);
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  MOCK DATA — matched to sample-output report
+//  (2026-04-03  |  mock-prod-cluster  |  41 nodes / 48 edges)
+// ═══════════════════════════════════════════════════════════════
+const MOCK = {
+  // ── /api/analyze ──────────────────────────────────────────
+  analyze: {
+    summary: { total_attack_paths: 18, circular_permissions: 1, blast_radius_nodes: 48, critical_node: 'web-frontend' },
+    analysis: {
+      graph_statistics: {
+        total_nodes: 41, total_edges: 48, namespaces: 5,
+        entry_points: 5, crown_jewels: 6, avg_degree: 2.34
+      },
+      attack_paths: {
+        total_paths: 18,
+        by_severity: { critical_count: 11, high_count: 5, medium_count: 2, low_count: 0 },
+        top_10_critical: [
+          { severity:'CRITICAL', path:['dev-1','web-frontend','default','cluster-admin','admin-token','kube-system'], total_risk:33.0, length:5 },
+          { severity:'CRITICAL', path:['internet','web-frontend','default','cluster-admin','admin-token','kube-system'], total_risk:32.0, length:5 },
+          { severity:'CRITICAL', path:['loadbalancer-svc','web-frontend','default','cluster-admin','admin-token','kube-system'], total_risk:31.0, length:5 },
+          { severity:'CRITICAL', path:['internet','loadbalancer-svc','api-server','sa-worker','pod-exec','worker-node-1','data-pvc'], total_risk:25.5, length:6 },
+          { severity:'CRITICAL', path:['dev-1','web-frontend','sa-webapp','secret-reader','db-credentials','production-db'], total_risk:24.1, length:5 },
+        ]
+      },
+      cve_analysis: { vulnerable_pods_count: 4, total_pods_scanned: 8 },
+      risk_assessment: {
+        risk_level: 'CRITICAL', overall_risk_score: 9.2,
+        attack_path_score: 9.5, cve_score: 8.1, topology_score: 7.8,
+        recommendations: [
+          'Remove cluster-admin binding from default ServiceAccount immediately',
+          'Patch CVE-2024-1234 on web-frontend (CVSS 8.1)',
+          'Restrict pod-exec Role — breaks 14 attack paths',
+          'Revoke sa-worker binding to pod-exec Role',
+          'Rotate cicd-deploy-token and restrict sa-cicd permissions'
+        ]
+      }
+    }
+  },
+
+  // ── /api/graph ────────────────────────────────────────────
+  graph: {
+    graph: {
+      nodes: [
+        {id:'internet',          data:{name:'internet',          type:'ExternalActor',    is_entry_point:true,  is_crown_jewel:false, risk_score:10.0, namespace:'external',  cves:[]}},
+        {id:'user-dev1',         data:{name:'dev-1',             type:'User',             is_entry_point:true,  is_crown_jewel:false, risk_score:5.0,  namespace:'default',   cves:[]}},
+        {id:'user-dev2',         data:{name:'dev-2',             type:'User',             is_entry_point:true,  is_crown_jewel:false, risk_score:5.0,  namespace:'default',   cves:[]}},
+        {id:'user-cicd',         data:{name:'cicd-bot',          type:'User',             is_entry_point:true,  is_crown_jewel:false, risk_score:6.0,  namespace:'ci',        cves:[]}},
+        {id:'pod-webfront',      data:{name:'web-frontend',      type:'Pod',              is_entry_point:false, is_crown_jewel:false, risk_score:7.5,  namespace:'default',   cves:['CVE-2024-1234']}},
+        {id:'pod-api',           data:{name:'api-server',        type:'Pod',              is_entry_point:false, is_crown_jewel:false, risk_score:6.0,  namespace:'default',   cves:['CVE-2023-4567']}},
+        {id:'pod-worker',        data:{name:'background-worker', type:'Pod',              is_entry_point:false, is_crown_jewel:false, risk_score:4.0,  namespace:'default',   cves:[]}},
+        {id:'pod-logger',        data:{name:'log-aggregator',    type:'Pod',              is_entry_point:false, is_crown_jewel:false, risk_score:4.0,  namespace:'logging',   cves:['CVE-2024-9999']}},
+        {id:'sa-webapp',         data:{name:'sa-webapp',         type:'ServiceAccount',   is_entry_point:false, is_crown_jewel:false, risk_score:5.5,  namespace:'default',   cves:[]}},
+        {id:'sa-worker',         data:{name:'sa-worker',         type:'ServiceAccount',   is_entry_point:false, is_crown_jewel:false, risk_score:4.5,  namespace:'default',   cves:[]}},
+        {id:'sa-cicd',           data:{name:'sa-cicd',           type:'ServiceAccount',   is_entry_point:false, is_crown_jewel:false, risk_score:8.0,  namespace:'ci',        cves:[]}},
+        {id:'sa-logger',         data:{name:'sa-logger',         type:'ServiceAccount',   is_entry_point:false, is_crown_jewel:false, risk_score:4.0,  namespace:'logging',   cves:[]}},
+        {id:'sa-default',        data:{name:'default',           type:'ServiceAccount',   is_entry_point:false, is_crown_jewel:false, risk_score:6.0,  namespace:'default',   cves:[]}},
+        {id:'role-secret-reader',data:{name:'secret-reader',     type:'Role',             is_entry_point:false, is_crown_jewel:false, risk_score:7.0,  namespace:'default',   cves:[]}},
+        {id:'role-pod-exec',     data:{name:'pod-exec',          type:'Role',             is_entry_point:false, is_crown_jewel:false, risk_score:8.5,  namespace:'default',   cves:[]}},
+        {id:'role-node-reader',  data:{name:'node-reader',       type:'Role',             is_entry_point:false, is_crown_jewel:false, risk_score:4.0,  namespace:'default',   cves:[]}},
+        {id:'clusterrole-admin', data:{name:'cluster-admin',     type:'ClusterRole',      is_entry_point:false, is_crown_jewel:false, risk_score:10.0, namespace:'cluster',   cves:[]}},
+        {id:'clusterrole-deploy',data:{name:'deployer',          type:'ClusterRole',      is_entry_point:false, is_crown_jewel:false, risk_score:7.5,  namespace:'cluster',   cves:[]}},
+        {id:'secret-db-creds',   data:{name:'db-credentials',    type:'Secret',           is_entry_point:false, is_crown_jewel:false, risk_score:9.5,  namespace:'default',   cves:[]}},
+        {id:'secret-api-key',    data:{name:'api-key',           type:'Secret',           is_entry_point:false, is_crown_jewel:false, risk_score:8.0,  namespace:'default',   cves:[]}},
+        {id:'secret-tls',        data:{name:'tls-cert',          type:'Secret',           is_entry_point:false, is_crown_jewel:false, risk_score:6.0,  namespace:'default',   cves:[]}},
+        {id:'secret-admin-token',data:{name:'admin-token',       type:'Secret',           is_entry_point:false, is_crown_jewel:true,  risk_score:10.0, namespace:'kube-system',cves:[]}},
+        {id:'secret-cicd-token', data:{name:'cicd-deploy-token', type:'Secret',           is_entry_point:false, is_crown_jewel:false, risk_score:8.5,  namespace:'ci',        cves:[]}},
+        {id:'configmap-dburl',   data:{name:'db-url-config',     type:'ConfigMap',        is_entry_point:false, is_crown_jewel:false, risk_score:5.5,  namespace:'default',   cves:[]}},
+        {id:'configmap-env',     data:{name:'app-env-config',    type:'ConfigMap',        is_entry_point:false, is_crown_jewel:false, risk_score:3.0,  namespace:'default',   cves:[]}},
+        {id:'db-production',     data:{name:'production-db',     type:'Database',         is_entry_point:false, is_crown_jewel:true,  risk_score:10.0, namespace:'data',      cves:[]}},
+        {id:'db-analytics',      data:{name:'analytics-db',      type:'Database',         is_entry_point:false, is_crown_jewel:true,  risk_score:7.0,  namespace:'data',      cves:[]}},
+        {id:'node-worker-1',     data:{name:'worker-node-1',     type:'Node',             is_entry_point:false, is_crown_jewel:true,  risk_score:9.0,  namespace:'cluster',   cves:['CVE-2024-3116']}},
+        {id:'node-worker-2',     data:{name:'worker-node-2',     type:'Node',             is_entry_point:false, is_crown_jewel:false, risk_score:9.0,  namespace:'cluster',   cves:[]}},
+        {id:'lb-service',        data:{name:'loadbalancer-svc',  type:'Service',          is_entry_point:true,  is_crown_jewel:false, risk_score:6.5,  namespace:'default',   cves:[]}},
+        {id:'svc-internal-api',  data:{name:'internal-api-svc',  type:'Service',          is_entry_point:false, is_crown_jewel:false, risk_score:5.0,  namespace:'default',   cves:[]}},
+        {id:'ns-kube-system',    data:{name:'kube-system',       type:'Namespace',        is_entry_point:false, is_crown_jewel:true,  risk_score:9.0,  namespace:'cluster',   cves:[]}},
+        {id:'pvc-data',          data:{name:'data-pvc',          type:'PersistentVolume', is_entry_point:false, is_crown_jewel:true,  risk_score:7.0,  namespace:'data',      cves:[]}},
+        {id:'svc-service-a',     data:{name:'service-a',         type:'Service',          is_entry_point:false, is_crown_jewel:false, risk_score:5.0,  namespace:'default',   cves:[]}},
+        {id:'svc-service-b',     data:{name:'service-b',         type:'Service',          is_entry_point:false, is_crown_jewel:false, risk_score:5.0,  namespace:'default',   cves:[]}},
+        {id:'pod-metrics',       data:{name:'metrics-collector', type:'Pod',              is_entry_point:false, is_crown_jewel:false, risk_score:3.5,  namespace:'monitoring',cves:[]}},
+        {id:'pod-admission',     data:{name:'admission-webhook', type:'Pod',              is_entry_point:false, is_crown_jewel:false, risk_score:8.5,  namespace:'kube-system',cves:[]}},
+        {id:'pod-sidecar',       data:{name:'sidecar-proxy',     type:'Pod',              is_entry_point:false, is_crown_jewel:false, risk_score:5.0,  namespace:'default',   cves:[]}},
+        {id:'sa-monitor',        data:{name:'sa-monitor',        type:'ServiceAccount',   is_entry_point:false, is_crown_jewel:false, risk_score:3.0,  namespace:'monitoring',cves:[]}},
+        {id:'clusterrole-view',  data:{name:'cluster-viewer',    type:'ClusterRole',      is_entry_point:false, is_crown_jewel:false, risk_score:2.0,  namespace:'cluster',   cves:[]}},
+        {id:'ns-default',        data:{name:'default',           type:'Namespace',        is_entry_point:false, is_crown_jewel:false, risk_score:4.0,  namespace:'cluster',   cves:[]}},
+      ],
+      edges: [
+        {source:'user-dev1',         target:'pod-webfront',      data:{binding_type:'can-exec',         weight:5.0, cve:'CVE-2024-1234', cvss:8.1}},
+        {source:'pod-webfront',      target:'sa-webapp',         data:{binding_type:'uses',             weight:3.0}},
+        {source:'sa-webapp',         target:'role-secret-reader',data:{binding_type:'bound-to',         weight:4.0}},
+        {source:'role-secret-reader',target:'secret-db-creds',   data:{binding_type:'can-read',         weight:5.0}},
+        {source:'secret-db-creds',   target:'db-production',     data:{binding_type:'grants-access-to', weight:9.0}},
+        {source:'lb-service',        target:'pod-api',           data:{binding_type:'routes-to',        weight:3.0}},
+        {source:'pod-api',           target:'sa-worker',         data:{binding_type:'uses',             weight:3.5, cve:'CVE-2023-4567', cvss:7.2}},
+        {source:'sa-worker',         target:'role-pod-exec',     data:{binding_type:'bound-to',         weight:5.0}},
+        {source:'role-pod-exec',     target:'node-worker-1',     data:{binding_type:'can-exec-on',      weight:7.0, cve:'CVE-2024-3116', cvss:9.0}},
+        {source:'user-cicd',         target:'sa-cicd',           data:{binding_type:'impersonates',     weight:4.0}},
+        {source:'sa-cicd',           target:'clusterrole-deploy',data:{binding_type:'bound-to',         weight:5.0}},
+        {source:'clusterrole-deploy',target:'secret-cicd-token', data:{binding_type:'can-read',         weight:4.5}},
+        {source:'secret-cicd-token', target:'db-production',     data:{binding_type:'grants-access-to', weight:7.0}},
+        {source:'pod-webfront',      target:'sa-default',        data:{binding_type:'falls-back-to',    weight:6.0}},
+        {source:'sa-default',        target:'clusterrole-admin', data:{binding_type:'bound-to',         weight:8.0}},
+        {source:'clusterrole-admin', target:'secret-admin-token',data:{binding_type:'can-read',         weight:5.0}},
+        {source:'secret-admin-token',target:'ns-kube-system',    data:{binding_type:'grants-access-to', weight:9.0}},
+        {source:'user-dev2',         target:'pod-logger',        data:{binding_type:'can-exec',         weight:4.0, cve:'CVE-2024-9999', cvss:6.5}},
+        {source:'pod-logger',        target:'sa-logger',         data:{binding_type:'uses',             weight:3.0}},
+        {source:'sa-logger',         target:'role-node-reader',  data:{binding_type:'bound-to',         weight:3.5}},
+        {source:'role-node-reader',  target:'node-worker-1',     data:{binding_type:'can-read',         weight:4.5}},
+        {source:'node-worker-1',     target:'pvc-data',          data:{binding_type:'mounts',           weight:5.0}},
+        {source:'pod-api',           target:'configmap-dburl',   data:{binding_type:'reads',            weight:2.5}},
+        {source:'configmap-dburl',   target:'db-analytics',      data:{binding_type:'exposes-endpoint', weight:4.0}},
+        {source:'svc-service-a',     target:'svc-service-b',     data:{binding_type:'admin-grant',      weight:5.0}},
+        {source:'svc-service-b',     target:'svc-service-a',     data:{binding_type:'admin-grant',      weight:5.0}},
+        {source:'internet',          target:'lb-service',        data:{binding_type:'reaches',          weight:3.0}},
+        {source:'internet',          target:'pod-webfront',      data:{binding_type:'reaches',          weight:4.0, cve:'CVE-2024-1234', cvss:8.1}},
+        {source:'lb-service',        target:'pod-webfront',      data:{binding_type:'routes-to',        weight:3.0}},
+        {source:'pod-webfront',      target:'svc-internal-api',  data:{binding_type:'calls',            weight:2.0}},
+        {source:'svc-internal-api',  target:'pod-api',           data:{binding_type:'routes-to',        weight:2.0}},
+        {source:'user-dev1',         target:'pod-worker',        data:{binding_type:'can-exec',         weight:3.0}},
+        {source:'pod-worker',        target:'sa-worker',         data:{binding_type:'uses',             weight:2.0}},
+        {source:'sa-webapp',         target:'secret-tls',        data:{binding_type:'can-read',         weight:2.0}},
+        {source:'sa-webapp',         target:'secret-api-key',    data:{binding_type:'can-read',         weight:4.0}},
+        {source:'pod-api',           target:'secret-api-key',    data:{binding_type:'mounts',           weight:3.0}},
+        {source:'sa-cicd',           target:'secret-cicd-token', data:{binding_type:'can-read',         weight:3.0}},
+        {source:'clusterrole-admin', target:'ns-default',        data:{binding_type:'admin-over',       weight:6.0}},
+        {source:'role-pod-exec',     target:'node-worker-2',     data:{binding_type:'can-exec-on',      weight:7.0}},
+        {source:'pod-logger',        target:'configmap-env',     data:{binding_type:'reads',            weight:1.5}},
+        {source:'pod-metrics',       target:'sa-monitor',        data:{binding_type:'uses',             weight:2.0}},
+        {source:'sa-monitor',        target:'clusterrole-view',  data:{binding_type:'bound-to',         weight:1.5}},
+        {source:'clusterrole-view',  target:'configmap-env',     data:{binding_type:'can-read',         weight:1.0}},
+        {source:'pod-sidecar',       target:'sa-webapp',         data:{binding_type:'uses',             weight:2.5}},
+        {source:'pod-admission',     target:'ns-kube-system',    data:{binding_type:'deployed-in',      weight:3.0}},
+        {source:'node-worker-2',     target:'ns-default',        data:{binding_type:'hosts',            weight:1.0}},
+        {source:'sa-default',        target:'secret-db-creds',   data:{binding_type:'can-read',         weight:7.0}},
+        {source:'secret-api-key',    target:'db-analytics',      data:{binding_type:'grants-access-to', weight:5.0}},
+      ]
+    }
+  },
+
+  // ── /api/attack-paths ─────────────────────────────────────
+  attackPaths: {
+    total_paths: 18,
+    by_severity: { critical_count: 11, high_count: 5, medium_count: 2, low_count: 0 },
+    paths: {
+      CRITICAL: [
+        { severity:'CRITICAL', path:['dev-1','web-frontend','default','cluster-admin','admin-token','kube-system'],         total_risk:33.0, length:5, hops:5, cves:['CVE-2024-1234'] },
+        { severity:'CRITICAL', path:['internet','web-frontend','default','cluster-admin','admin-token','kube-system'],      total_risk:32.0, length:5, hops:5, cves:['CVE-2024-1234'] },
+        { severity:'CRITICAL', path:['loadbalancer-svc','web-frontend','default','cluster-admin','admin-token','kube-system'],total_risk:31.0, length:5, hops:5, cves:[] },
+        { severity:'CRITICAL', path:['internet','loadbalancer-svc','api-server','sa-worker','pod-exec','worker-node-1','data-pvc'],total_risk:25.5, length:6, hops:6, cves:['CVE-2023-4567','CVE-2024-3116'] },
+        { severity:'CRITICAL', path:['dev-1','web-frontend','sa-webapp','secret-reader','db-credentials','production-db'],  total_risk:24.1, length:5, hops:5, cves:['CVE-2024-1234'] },
+        { severity:'CRITICAL', path:['internet','web-frontend','sa-webapp','secret-reader','db-credentials','production-db'],total_risk:23.1, length:5, hops:5, cves:['CVE-2024-1234'] },
+        { severity:'CRITICAL', path:['loadbalancer-svc','api-server','sa-worker','pod-exec','worker-node-1','data-pvc'],    total_risk:23.5, length:5, hops:5, cves:['CVE-2023-4567','CVE-2024-3116'] },
+        { severity:'CRITICAL', path:['loadbalancer-svc','web-frontend','sa-webapp','secret-reader','db-credentials','production-db'],total_risk:22.1, length:5, hops:5, cves:[] },
+        { severity:'CRITICAL', path:['dev-1','background-worker','sa-worker','pod-exec','worker-node-1','data-pvc'],        total_risk:22.0, length:5, hops:5, cves:['CVE-2024-3116'] },
+        { severity:'CRITICAL', path:['internet','loadbalancer-svc','api-server','sa-worker','pod-exec','worker-node-1'],    total_risk:20.5, length:5, hops:5, cves:['CVE-2023-4567','CVE-2024-3116'] },
+        { severity:'CRITICAL', path:['dev-2','log-aggregator','sa-logger','node-reader','worker-node-1','data-pvc'],        total_risk:20.0, length:5, hops:5, cves:['CVE-2024-9999'] },
+      ],
+      HIGH: [
+        { severity:'HIGH', path:['loadbalancer-svc','api-server','sa-worker','pod-exec','worker-node-1'],                  total_risk:18.5, length:4, hops:4, cves:['CVE-2023-4567','CVE-2024-3116'] },
+        { severity:'HIGH', path:['dev-1','background-worker','sa-worker','pod-exec','worker-node-1'],                      total_risk:17.0, length:4, hops:4, cves:['CVE-2024-3116'] },
+        { severity:'HIGH', path:['dev-1','web-frontend','internal-api-svc','api-server','db-url-config','analytics-db'],   total_risk:15.5, length:5, hops:5, cves:['CVE-2024-1234'] },
+        { severity:'HIGH', path:['dev-2','log-aggregator','sa-logger','node-reader','worker-node-1'],                      total_risk:15.0, length:4, hops:4, cves:['CVE-2024-9999'] },
+        { severity:'HIGH', path:['cicd-bot','sa-cicd','cicd-deploy-token','production-db'],                                total_risk:14.0, length:3, hops:3, cves:[] },
+      ],
+      MEDIUM: [
+        { severity:'MEDIUM', path:['internet','loadbalancer-svc','api-server','db-url-config','analytics-db'],             total_risk:11.5, length:4, hops:4, cves:[] },
+        { severity:'MEDIUM', path:['loadbalancer-svc','api-server','db-url-config','analytics-db'],                       total_risk:9.5,  length:3, hops:3, cves:[] },
+      ],
+      LOW: []
+    }
+  },
+
+  // ── /api/blast-radius/:node ───────────────────────────────
+  blastRadius: {
+    'internet': {
+      source:'internet', total_reachable:13, severity:'CRITICAL',
+      crown_jewels_reached:[
+        {id:'ns-kube-system', name:'kube-system', hops:3},
+        {id:'db-production',  name:'production-db', hops:3},
+        {id:'db-analytics',   name:'analytics-db', hops:3},
+      ],
+      hop_distribution:{ 1:2, 2:4, 3:7 },
+      breakdown_by_type:{ Pod:3, ServiceAccount:3, Secret:3, Role:1, Service:2, Namespace:1 }
+    },
+    'user-dev1': {
+      source:'user-dev1', total_reachable:13, severity:'CRITICAL',
+      crown_jewels_reached:[
+        {id:'db-production',  name:'production-db', hops:3},
+        {id:'ns-kube-system', name:'kube-system', hops:3},
+      ],
+      hop_distribution:{ 1:2, 2:4, 3:7 },
+      breakdown_by_type:{ Pod:3, ServiceAccount:3, Secret:3, Role:2, Service:2 }
+    },
+    'user-dev2': {
+      source:'user-dev2', total_reachable:4, severity:'MEDIUM',
+      crown_jewels_reached:[],
+      hop_distribution:{ 1:1, 2:2, 3:1 },
+      breakdown_by_type:{ Pod:1, ServiceAccount:1, ConfigMap:1, Role:1 }
+    },
+    'user-cicd': {
+      source:'user-cicd', total_reachable:4, severity:'HIGH',
+      crown_jewels_reached:[{id:'db-production', name:'production-db', hops:3}],
+      hop_distribution:{ 1:1, 2:2, 3:1 },
+      breakdown_by_type:{ ServiceAccount:1, ClusterRole:1, Secret:1, Database:1 }
+    },
+    'lb-service': {
+      source:'lb-service', total_reachable:14, severity:'CRITICAL',
+      crown_jewels_reached:[
+        {id:'db-analytics',   name:'analytics-db', hops:3},
+        {id:'db-production',  name:'production-db', hops:3},
+        {id:'ns-kube-system', name:'kube-system', hops:3},
+      ],
+      hop_distribution:{ 1:2, 2:6, 3:6 },
+      breakdown_by_type:{ Pod:3, ServiceAccount:3, Secret:4, Role:2, Namespace:1, Database:1 }
+    }
+  },
+
+  // ── /api/critical-nodes ───────────────────────────────────
+  criticalNodes: {
+    baseline_paths: 46,
+    recommendation: "Remove permission binding 'web-frontend' (Pod) to eliminate 32 of 46 attack paths.",
+    critical_nodes: [
+      { node_id:'pod-webfront',      name:'web-frontend',     type:'Pod',            paths_broken:32, impact_percentage:69.6, criticality:'CRITICAL' },
+      { node_id:'pod-api',           name:'api-server',       type:'Pod',            paths_broken:24, impact_percentage:52.2, criticality:'CRITICAL' },
+      { node_id:'svc-internal-api',  name:'internal-api-svc', type:'Service',        paths_broken:16, impact_percentage:34.8, criticality:'HIGH'     },
+      { node_id:'sa-worker',         name:'sa-worker',        type:'ServiceAccount', paths_broken:14, impact_percentage:30.4, criticality:'HIGH'     },
+      { node_id:'role-pod-exec',     name:'pod-exec',         type:'Role',           paths_broken:14, impact_percentage:30.4, criticality:'HIGH'     },
+    ]
+  },
+
+  // ── /api/cve-scan ─────────────────────────────────────────
+  cveScan: {
+    vulnerable_pods_count: 4, total_pods_scanned: 8,
+    findings: [
+      { cve_id:'CVE-2024-1234', pod_name:'web-frontend', namespace:'default', severity:'HIGH',     cvss_score:8.1, image:'nginx:1.21', description:'HTTP/2 rapid reset vulnerability' },
+      { cve_id:'CVE-2024-3116', pod_name:'worker-node-1',namespace:'cluster', severity:'CRITICAL', cvss_score:9.0, image:'kubelet:1.28', description:'Container escape via runc exploit' },
+      { cve_id:'CVE-2023-4567', pod_name:'api-server',   namespace:'default', severity:'HIGH',     cvss_score:7.2, image:'node:18-alpine', description:'Prototype pollution in request handler' },
+      { cve_id:'CVE-2024-9999', pod_name:'log-aggregator',namespace:'logging',severity:'MEDIUM',   cvss_score:6.5, image:'fluentd:1.16', description:'SSRF via log forwarding endpoint' },
+    ]
+  },
+
+  // ── /api/blast-radius (DFS cycles raw) ────────────────────
+  dfs: {
+    cycles_found: 1,
+    cycles: [{ id:'cycle-1', nodes:['service-a','service-b'], edges:['admin-grant','admin-grant'], description:'Mutual admin-grant creates circular permission escalation' }],
+    circular_permissions: [{ id:'cycle-1', path:'service-a ↔ service-b ↔ service-a', risk:'HIGH' }],
+    summary: 'DFS detected 1 circular permission cycle. service-a and service-b grant each other admin rights.'
+  }
+};
+
+// ─── MOCK API INTERCEPT ───
+// Overrides fetch calls to the backend and serves mock data
+const _realFetch = window.fetch.bind(window);
+window.fetch = async function(url, opts) {
+  const u = String(url);
+  // Only intercept our API calls
+  if (!u.includes(':8001') && !u.includes('localhost')) return _realFetch(url, opts);
+
+  await new Promise(r => setTimeout(r, 280 + Math.random() * 180)); // realistic latency
+
+  const path = u.replace(/https?:\/\/[^/]+/, '');
+
+  if (path === '/' || path === '') {
+    return new Response(JSON.stringify({status:'ok', cluster:'mock-prod-cluster', mock:true}), {status:200, headers:{'Content-Type':'application/json'}});
+  }
+  if (path === '/api/analyze') {
+    return new Response(JSON.stringify(MOCK.analyze), {status:200, headers:{'Content-Type':'application/json'}});
+  }
+  if (path === '/api/graph') {
+    return new Response(JSON.stringify(MOCK.graph), {status:200, headers:{'Content-Type':'application/json'}});
+  }
+  if (path === '/api/attack-paths') {
+    return new Response(JSON.stringify(MOCK.attackPaths), {status:200, headers:{'Content-Type':'application/json'}});
+  }
+  if (path.startsWith('/api/blast-radius/')) {
+    const nodeId = decodeURIComponent(path.replace('/api/blast-radius/', ''));
+    const result = MOCK.blastRadius[nodeId] || {
+      source:nodeId, total_reachable:3, severity:'LOW',
+      crown_jewels_reached:[], hop_distribution:{1:1,2:2}, breakdown_by_type:{Pod:1,ServiceAccount:1,Role:1}
+    };
+    // 🔔 ALERT CHECK — BFS crown jewel
+    setTimeout(() => checkAndTriggerAlert('bfs', result), 350);
+    return new Response(JSON.stringify(result), {status:200, headers:{'Content-Type':'application/json'}});
+  }
+  if (path === '/api/critical-nodes') {
+    return new Response(JSON.stringify(MOCK.criticalNodes), {status:200, headers:{'Content-Type':'application/json'}});
+  }
+  if (path === '/api/cve-scan') {
+    // 🔔 ALERT CHECK — CVE scan
+    setTimeout(() => checkAndTriggerAlert('cve', MOCK.cveScan.findings), 350);
+    return new Response(JSON.stringify(MOCK.cveScan), {status:200, headers:{'Content-Type':'application/json'}});
+  }
+  if (path.startsWith('/api/dfs') || path.startsWith('/api/cycles') || path === '/api/circular-permissions') {
+    // 🔔 ALERT CHECK — DFS cycle
+    setTimeout(() => checkAndTriggerAlert('dfs', MOCK.dfs), 350);
+    const dfsCycles = MOCK.dfs.cycles.map(c => ({...c, severity:'HIGH', total_risk:12.0, node_details:c.nodes.map(n => ({name:n, type:'Service'}))})); return new Response(JSON.stringify(dfsCycles), {status:200, headers:{'Content-Type':'application/json'}});
+  }
+  if (path.startsWith('/api/simulate/')) {
+    return new Response(JSON.stringify({paths_to_crown_jewels:[{path:['api-server','sa-worker','pod-exec','worker-node-1']}]}), {status:200, headers:{'Content-Type':'application/json'}});
+  }
+
+  return new Response(JSON.stringify({detail:'Mock: endpoint not found'}), {status:404, headers:{'Content-Type':'application/json'}});
+};
+
+// ─── PATCH: fire alerts on attack path render ───
+const _origRenderAP = renderAttackPaths;
+window.renderAttackPaths = function(filter) {
+  _origRenderAP(filter);
+  // Check the top critical path for alert
+  const paths = state.allAttackPaths || [];
+  if (paths.length > 0) {
+    const top = paths[0];
+    checkAndTriggerAlert('attack-path', { path: top.path || [], cvss: top.cves?.length ? 8.1 : 0 });
+  }
+};
+
+// ─── AUTO-POPULATE BFS: pre-fill common source nodes ───
+document.addEventListener('DOMContentLoaded', () => {
+  const bfsInput = document.getElementById('bfs-node-input');
+  if (bfsInput && !bfsInput.value) bfsInput.value = 'internet';
+});
 </script>
 </body>
 </html>
