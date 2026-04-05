@@ -107,9 +107,6 @@ This project is developed for hackathon purposes and is currently unlicensed/ope
 
 ## Output & Result
 
-![Screenshot 1](Screenshot%202026-04-05%20105316.png)
-![Screenshot 2](Screenshot%202026-04-05%20105322.png)
-![Image](image.png)
 ![Homepage](Homepage.png)
 ![Analysis Page](Analysis_page.png)
 ![Recommendation Page](Recommandation_page.png)
